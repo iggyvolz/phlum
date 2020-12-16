@@ -6,6 +6,7 @@ namespace iggyvolz\phlum\test;
 
 use iggyvolz\phlum\PhlumObject;
 use iggyvolz\phlum\PhlumSchema;
+use iggyvolz\phlum\Attributes\Access;
 
 class BasicTestCase extends PhlumObject
 {
@@ -15,6 +16,8 @@ class BasicTestCase extends PhlumObject
     {
         return new class extends PhlumSchema {
             public int $foo;
+            #[Access(Access::PROTECTED, Access::PRIVATE)]
+            public int $protectedReadOnly;
         };
     }
 }

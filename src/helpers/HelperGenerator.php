@@ -8,6 +8,7 @@ use ReflectionClass;
 use iggyvolz\phlum\PhlumObject;
 use Nette\PhpGenerator\PhpFile;
 use Nette\PhpGenerator\PsrPrinter;
+use iggyvolz\phlum\Attributes\Access;
 
 class HelperGenerator
 {
@@ -61,8 +62,13 @@ class HelperGenerator
         foreach($schema->getProperties() as $property) {
             $propertyName = $property->getName();
             $upperPropertyName = ucfirst($propertyName);
+            $access = Access::get($property);
             $getter = $trait->addMethod("get$upperPropertyName");
+            $getter->setReturnType("int");
+            $access->applyGetter($getter);
             $setter = $trait->addMethod("set$upperPropertyName");
+            $setter->setReturnType("int");
+            $access->applySetter($setter);
         }
         return $file;
     }

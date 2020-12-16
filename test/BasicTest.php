@@ -16,12 +16,20 @@ class BasicTest extends TestCase
     {
         $this->assertTrue(trait_exists(BasicTestCase_phlum::class));
     }
-    public function testHelperHasMethod(): void
+    public function testHelperHasGetMethod(): void
     {
         $refl=new ReflectionClass(BasicTestCase::class);
         $this->assertTrue($refl->hasMethod("getFoo"));
         $method = $refl->getMethod("getFoo");
         // Check casing of method name
         $this->assertSame($method->getName(), "getFoo");
+    }
+    public function testHelperHasSetMethod(): void
+    {
+        $refl=new ReflectionClass(BasicTestCase::class);
+        $this->assertTrue($refl->hasMethod("setFoo"));
+        $method = $refl->getMethod("setFoo");
+        // Check casing of method name
+        $this->assertSame($method->getName(), "setFoo");
     }
 }

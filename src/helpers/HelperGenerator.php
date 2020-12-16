@@ -62,6 +62,7 @@ class HelperGenerator
             $propertyName = $property->getName();
             $upperPropertyName = ucfirst($propertyName);
             $getter = $trait->addMethod("get$upperPropertyName");
+            $setter = $trait->addMethod("set$upperPropertyName");
         }
         return $file;
     }

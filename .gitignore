@@ -1,0 +1,4 @@
+/vendor
+/workspace.code-workspace
+/.phpunit.result.cache
+/coverage

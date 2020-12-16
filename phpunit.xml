@@ -1,0 +1,18 @@
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php" colors="true">
+    <testsuites>
+        <testsuite name="test">
+            <directory>test</directory>
+        </testsuite>
+    </testsuites>
+    <coverage>
+        <include>
+            <directory suffix=".php">src</directory>
+        </include>
+
+        <report>
+            <html outputDirectory="coverage" lowUpperBound="50" highLowerBound="90"/>
+        </report>
+    </coverage>
+</phpunit>

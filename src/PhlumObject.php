@@ -6,5 +6,5 @@ namespace iggyvolz\phlum;
 
 abstract class PhlumObject
 {
-    abstract protected static function getSchema(): PhlumSchema;
+    abstract public static function getSchema(): PhlumSchema;
 }

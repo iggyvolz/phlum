@@ -2,6 +2,7 @@
 <ruleset>
     <file>src</file>
     <file>test</file>
+    <exclude-pattern>*_phlum.php</exclude-pattern>
     <rule ref="PSR12">
         <!-- Attributes are read as "side effects"... -->
         <exclude name="PSR1.Files.SideEffects.FoundWithSymbols" />

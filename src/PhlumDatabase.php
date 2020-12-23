@@ -10,20 +10,17 @@ use wapmorgan\BinaryStream\BinaryStream;
 
 class PhlumDatabase
 {
-    /**
-     * @var PhlumSchema[]
-     */
-    private array $schemas;
-
-    /**
-     * @var BinaryStream[]
-     */
-    private array $streams;
-    /**
-     * @psalm-param ReflectionClass<PhlumObject>[] $classes
-     */
-    public function __construct(private string $dir, private array $classes) {
-        $this->schemas = array_map(fn(ReflectionClass $rc):PhlumSchema => $rc->getMethod("getSchema")->invoke(null));
-        $this->streams = array_map(fn(PhlumSchema $sch):BinaryStream => $sch->open($dir));
+    public function __construct(private string $dataDir) {
+    }
+    public function getDataDir(): string
+    {
+        return $this->dataDir;
+    }
+    public function reset(): void
+    {
+        foreach(scandir($this->dataDir) as $file) {
+            // Clear old DB
+            if($file[0] !== ".") unlink($this->dataDir . "/" . $file); 
+        }
     }
 }

@@ -12,5 +12,5 @@ interface PhlumProperty
 {
     public function getWidth():int;
     public function read(BinaryStream $stream):mixed;
-    public function write(mixed $val, BinaryStream $stream):void;
+    public function write(BinaryStream $stream, mixed $val):void;
 }

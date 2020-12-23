@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum;
 
+use LogicException;
+use iggyvolz\phlum\PhlumTable;
+use iggyvolz\phlum\PhlumDatabase;
+
 abstract class PhlumObject
 {
-    abstract public static function getSchema(): PhlumSchema;
+    // public static function create(PhlumDatabase $db, ...):static
+    // public static function get(PhlumDatabase $db, int $id): static
 }

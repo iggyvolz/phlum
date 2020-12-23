@@ -6,6 +6,7 @@ namespace iggyvolz\phlum\Attributes\Properties;
 
 use Attribute;
 use RuntimeException;
+use wapmorgan\BinaryStream\BinaryStream;
 
 #[Attribute]
 #[Description("Controls access for a Phlum property")]
@@ -19,7 +20,7 @@ class Int64 implements PhlumProperty
     {
         return $stream->readInteger(64);
     }
-    public function write(mixed $val, BinaryStream $stream):void
+    public function write(BinaryStream $stream, mixed $val):void
     {
         if(!is_int($val)) {
             throw new RuntimeException("Illegal type for Int64: " . get_debug_type($val));

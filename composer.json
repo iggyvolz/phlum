@@ -19,7 +19,8 @@
     "require": {
         "php": "^8.0",
         "iggyvolz/initializable": "^1.0",
-        "nette/php-generator": "^3.5"
+        "nette/php-generator": "^3.5",
+        "wapmorgan/binary-stream": "^0.4.0"
     },
     "autoload": {
         "psr-4": {

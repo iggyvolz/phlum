@@ -7,10 +7,10 @@ namespace iggyvolz\phlum\Attributes\Properties;
 use Attribute;
 
 #[Attribute]
-class Int64 extends Integer
+class Byte extends Integer
 {
     public function __construct()
     {
-        parent::__construct(8);
+        parent::__construct(1);
     }
 }

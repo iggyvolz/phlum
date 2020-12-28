@@ -1,42 +1,38 @@
 <?php
 declare(strict_types=1);
 
-use iggyvolz\phlum\PhlumObject;
-use iggyvolz\phlum\helpers\HelperGenerator;
+use iggyvolz\phlum\HelperGeneratorFactory;
 
-require_once __DIR__ . "/vendor/autoload.php";
-
+// Add autoloader to generate a stub, so that PHP can compile the main class
 spl_autoload_register(function(string $class) {
     if(str_ends_with($class, "_phlum")) {
-        // Generate stub so that PHP can compile the main class
         $expl = explode("\\", $class);
         $classname = array_pop($expl);
         $ns = implode("\\", $expl);
-        eval("namespace $ns { trait $classname {} }");
+        eval(<<<EOT
+            namespace $ns
+            {
+                trait $classname
+                {
+                    public static function get(mixed \$driver, int \$id): static
+                    {
+                        throw new \\LogicException("Cannot call method on stub trait");
+                    }
+                    public function getId(): int
+                    {
+                        throw new \\LogicException("Cannot call method on stub trait");
+                    }
+                }
+            }
+        EOT);
     }
-});
+}, prepend: true);
 
-// Remvoe all phlum files
-foreach([__DIR__ . "/src", __DIR__ . "/test"] as $dir) {
-    $directory = new RecursiveDirectoryIterator($dir);
-    $iterator = new RecursiveIteratorIterator($directory);
-    $regex = new RegexIterator($iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
-    foreach(array_keys(iterator_to_array($regex)) as $file) {
-        if(str_ends_with($file, "_phlum.php")) {
-            unlink($file);
-        }
-    }
-}
+HelperGeneratorFactory::register();
+// Require all classes in chosen directory to force helper generation
+$dir = $argv[1];
 
-// Require all PHP files
-foreach([__DIR__ . "/src", __DIR__ . "/test"] as $dir) {
-    $directory = new RecursiveDirectoryIterator($dir);
-    $iterator = new RecursiveIteratorIterator($directory);
-    $regex = new RegexIterator($iterator, '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
-    foreach(array_keys(iterator_to_array($regex)) as $file) {
-        require_once $file;
-    }
+$it = new RegexIterator(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir)), '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
+foreach($it as $f => $_) {
+    require_once $f;
 }
-HelperGenerator::generateHelpers(...array_filter(get_declared_classes(), fn(string $c):bool => 
-    is_subclass_of($c, PhlumObject::class)
-));

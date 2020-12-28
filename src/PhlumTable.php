@@ -4,106 +4,137 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum;
 
-use WeakMap;
+use iggyvolz\phlum\Attributes\Transformer;
+use iggyvolz\phlum\Attributes\Transformers\PassthroughTransformer;
+use iggyvolz\phlum\Attributes\Transformers\PhlumObjectTransformer;
 use ReflectionClass;
-use RuntimeException;
 use ReflectionProperty;
-use ReflectionAttribute;
-use iggyvolz\phlum\PhlumDatabase;
-use wapmorgan\BinaryStream\BinaryStream;
-use iggyvolz\phlum\Attributes\Properties\PhlumProperty;
+use ReflectionType;
+use WeakMap;
+use WeakReference;
 
 abstract class PhlumTable
 {
-    protected ?int $id=null;
     public function getId(): int
     {
-        if(is_null($this->id)) {
-            throw new RuntimeException("Attempting to get ID of new element");
-        }
         return $this->id;
     }
-    final public function __construct(private PhlumDatabase $db) {}
+    final public function __construct(private PhlumDriver $driver, private int $id) {}
     /**
      * @return list<ReflectionProperty>
      */
-    public static function getReflectionProperties(): array
-    {
-        $refl = new ReflectionClass(static::class);
-        $props = $refl->getProperties();
-        return array_filter($props, fn(ReflectionProperty $rp):bool => !empty($rp->getAttributes(PhlumProperty::class, ReflectionAttribute::IS_INSTANCEOF)));
-    }
-    /**
-     * @return list<PhlumProperty>
-     */
     public static function getProperties(): array
     {
-        $props = static::getReflectionProperties();
-        $attributes = array_map(fn(ReflectionProperty $rp):PhlumProperty => $rp->getAttributes(PhlumProperty::class, ReflectionAttribute::IS_INSTANCEOF)[0]->newInstance(), $props);
-        return $attributes;
+        $refl = new ReflectionClass(static::class);
+        // Filter out $id
+        $props = array_filter($refl->getProperties(), fn(ReflectionProperty $rp) => $rp->getDeclaringClass()->getName() === static::class);
+        $propNames = array_map(fn(ReflectionProperty $prop) => $prop->getName(), $props);
+        return array_combine($propNames, $props);
     }
-    public static function getRowWidth(): int
-    {
-        return array_sum(array_map(fn(PhlumProperty $prop): int => $prop->getWidth(), static::getProperties()));
-    }
-    private static ?WeakMap $streams = null;
-    private static function getStream(PhlumDatabase $db): BinaryStream
-    {
-        if(is_null(self::$streams)) {
-            self::$streams = new WeakMap();
-        }
-        $streams = self::$streams[$db] ?? [];
-        if(!array_key_exists(static::class, $streams)) {
-            $file = $db->getDataDir() . "/" . static::getFileName();
-            if(!file_exists($file)) {
-                $bs = new BinaryStream($file, BinaryStream::CREATE);
-                $bs->writeInteger(0, 64);
-            }
-            $streams[static::class] = new BinaryStream($file, BinaryStream::REWRITE);
-            self::$streams[$db] = $streams;
-        }
-        return $streams[static::class];
-    }
-    private static function getFileName(): string
+    private static function getTableName(): string
     {
         return hash("sha256", static::class);
     }
-    public static function count(PhlumDatabase $db):int
+
+    /**
+     * @var WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
+     */
+    private static WeakMap $objects;
+    private static function getObject(PhlumDriver $driver, int $id): ?static
     {
-        $stream = static::getStream($db);
-        $stream->go(0);
-        return $stream->readInteger(64);
+        if(!isset(self::$objects)) {
+            self::$objects = new WeakMap();
+        }
+        return self::$objects->offsetGet($driver)[static::class][$id]?->get() ?? null;
     }
-    public static function read(PhlumDatabase $db, int $id):static
+    private static function setObject(PhlumDriver $driver, self $object): void
     {
-        $stream = static::getStream($db);
-        $stream->go(8 + $id * static::getRowWidth());
-        $self = new static($db);
-        foreach(static::getProperties() as $i => $phlumprop) {
-            static::getReflectionProperties()[$i]->setValue($self, $phlumprop->read($stream));
+        if(!isset(self::$objects)) {
+            self::$objects = new WeakMap();
+        }
+        $objects = self::$objects->offsetExists($driver) ? self::$objects->offsetGet($driver) : [];
+        if(!array_key_exists(static::class, $objects)) {
+            $objects[static::class] = [];
+        }
+        $objects[static::class][$object->id] = WeakReference::create($object);
+        self::$objects->offsetSet($driver, $objects);
+    }
+    public static function create(PhlumDriver $driver, array $props): static
+    {
+        foreach($props as $key => &$value) {
+            $value = self::getTransformer(static::getProperties()[$key])->from($driver, $value);
+        }
+        $self = new static($driver, $driver->create(static::getTableName(), $props));
+        foreach(static::getProperties() as $property) {
+            $property->setAccessible(true);
+            $property->setValue($self, self::getTransformer($property)->to($driver, $props[$property->getName()]));
+        }
+        static::setObject($driver, $self);
+        return $self;
+    }
+    public static function get(PhlumDriver $driver, int $id): static
+    {
+        $self = static::getObject($driver, $id);
+        if(is_null($self)) {
+            $self = new static($driver, $id);
+            $props = $driver->read(static::getTableName(), $id);
+            foreach(static::getProperties() as $property) {
+                $property->setAccessible(true);
+                $property->setValue($self, self::getTransformer($property)->to($driver, $props[$property->getName()]));
+            }
         }
         return $self;
     }
-    public function write():void
+    public function write(): void
     {
-        $stream = static::getStream($this->db);
-        if(!is_null($this->id)) {
-            $stream->go(8 + $this->id * static::getRowWidth());
-        } else {
-            // Go to end of stream
-            $stream->go(0);
-            $newId = $stream->readInteger(64);
-            $stream->go(0);
-            $stream->writeInteger($newId + 1, 64);
-            $stream->go(8 + $newId * static::getRowWidth());
+        $props = [];
+        foreach(static::getProperties() as $property) {
+            $props[$property->getName()] = self::getTransformer($property)->from($this->driver, $property->getValue($this));
+        }
+        $this->driver->update(static::getTableName(), $this->id, $props);
+    }
 
+    /**
+     * @var null|WeakReference<PhlumObject>
+     */
+    private ?WeakReference $phlumObject = null;
+    public function getPhlumObject(callable $creation): PhlumObject
+    {
+        $obj = $this->phlumObject?->get();
+        if(is_null($obj)) {
+            $obj = $creation($this);
+            $this->phlumObject = WeakReference::create($obj);
         }
-        foreach(static::getProperties() as $i => $phlumprop) {
-            $value = static::getReflectionProperties()[$i]->getValue($this);
-            $phlumprop->write($stream, $value);
+        return $obj;
+    }
+
+    /**
+     * @var WeakMap<ReflectionProperty,Transformer>|null
+     */
+    private static ?WeakMap $transformerMap = null;
+    private static function getTransformer(ReflectionProperty $property): Transformer
+    {
+        if(is_null(self::$transformerMap)) {
+            self::$transformerMap = new WeakMap();
         }
-        if(is_null($this->id)) {
-            $this->id = $newId;
+        if(!self::$transformerMap->offsetExists($property)) {
+            self::$transformerMap->offsetSet($property, self::getTransformerForType($property->getType()));
         }
+        return self::$transformerMap->offsetGet($property);
+    }
+
+    private static function getTransformerForType(ReflectionType $property): Transformer
+    {
+        if(!$property instanceof \ReflectionNamedType) {
+            throw new \LogicException("Default transformer for union type not supported");
+        }
+        $type = $property->getName();
+        if($type === "int" || $type === "float" || $type === "string") {
+            return new PassthroughTransformer();
+        }
+        if(is_subclass_of($type, PhlumObject::class)) {
+            return new PhlumObjectTransformer($type);
+        }
+        throw new \LogicException("Could not determine default transformer for $type");
     }
 }

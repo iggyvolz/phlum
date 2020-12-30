@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum;
 
-use JetBrains\PhpStorm\ArrayShape;
+//use JetBrains\PhpStorm\ArrayShape;
 use ReflectionClass;
 use ReflectionAttribute;
 use Nette\PhpGenerator\PhpFile;
@@ -68,7 +68,10 @@ class HelperGenerator implements Stringable
         // Add getAll method
         $getAll = $trait->addMethod("getAll")->setPublic()->setStatic()->setReturnType("array");
         $getAll->addParameter("driver")->setType(PhlumDriver::class);
-        $getAll->addBody("return array_map(fn(\\$schema \$val): static => \$val->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema)), \\$schema::getMany(\$driver, array_filter([");
+        $getAll->addBody(
+            "return array_map(fn(\\$schema \$val): static => \$val->getPhlumObject(fn(\\$schema \$schema)" .
+            " => new self(\$schema)), \\$schema::getMany(\$driver, ["
+        );
         $getAllParam = $getAll->addParameter("condition")->setType('array')->setDefaultValue([]);
         $arrayShape = [];
         // Add getters and setters for properties
@@ -94,20 +97,20 @@ class HelperGenerator implements Stringable
             $getAll->addBody("    \$condition['$propertyName'] ?? null,");
         }
 //        $getAllParam->addAttribute(ArrayShape::class, [$arrayShape]);
-        $getAll->addBody("], fn(\$x) => !is_null(\$x))));");
+        $getAll->addBody("]));");
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
         return $file;
     }
 
     private static function getTypeName(?ReflectionType $type): string
     {
-        if(is_null($type)) {
+        if (is_null($type)) {
             throw new \RuntimeException("Illegal untyped property");
         }
-        if($type instanceof \ReflectionNamedType) {
+        if ($type instanceof \ReflectionNamedType) {
             return $type->getName();
         }
-        if($type instanceof \ReflectionUnionType) {
+        if ($type instanceof \ReflectionUnionType) {
             return implode("|", array_map(fn(ReflectionType $t): string => self::getTypeName($t), $type->getTypes()));
         }
         throw new \LogicException("Unknown reflection type");

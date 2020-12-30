@@ -14,14 +14,14 @@ use Nette\PhpGenerator\Method;
 #[Description("Controls access for a Phlum property")]
 class Access
 {
-    public const PUBLIC=1;
-    public const PROTECTED=2;
-    public const PRIVATE=3;
+    public const PUBLIC = 1;
+    public const PROTECTED = 2;
+    public const PRIVATE = 3;
     public function __construct(public int $read, public int $write)
     {
     }
     #[Description("Gets a default access level given a Phlum property")]
-    private static function getDefault(ReflectionProperty $property):self
+    private static function getDefault(ReflectionProperty $property): self
     {
         $accessLevel = match(true) {
             $property->isPublic() => self::PUBLIC,
@@ -31,10 +31,10 @@ class Access
         return new self($accessLevel, $accessLevel);
     }
     #[Description("Gets the access level for a Phlum property")]
-    public static function get(ReflectionProperty $property):self
+    public static function get(ReflectionProperty $property): self
     {
         $attributes = $property->getAttributes(self::class, ReflectionAttribute::IS_INSTANCEOF);
-        if(empty($attributes)) {
+        if (empty($attributes)) {
             return self::getDefault($property);
         } else {
             return $attributes[0]->newInstance();
@@ -48,9 +48,9 @@ class Access
     {
         self::apply($method, $this->write);
     }
-    private static function apply(Method $method, int $accessLevel):void
+    private static function apply(Method $method, int $accessLevel): void
     {
-        switch($accessLevel) {
+        switch ($accessLevel) {
             case self::PUBLIC:
                 $method->setPublic();
                 $method->setFinal();

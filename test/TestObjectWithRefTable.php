@@ -1,8 +1,6 @@
 <?php
 
-
 namespace iggyvolz\phlum\test;
-
 
 use iggyvolz\phlum\PhlumTable;
 

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace iggyvolz\phlum;
 
 class MemoryDriver implements PhlumDriver
@@ -17,11 +16,11 @@ class MemoryDriver implements PhlumDriver
      */
     public function create(string $table, array $data): int
     {
-        if(!array_key_exists($table, $this->memory)) {
+        if (!array_key_exists($table, $this->memory)) {
             $this->memory[$table] = [];
         }
         $id = count($this->memory[$table]);
-        $this->memory[$table][]=$data;
+        $this->memory[$table][] = $data;
         return $id;
     }
 
@@ -43,15 +42,14 @@ class MemoryDriver implements PhlumDriver
     public function readMany(string $table, array $condition): array
     {
         $keys = array_keys($this->memory[$table]);
-        return array_values(array_filter($keys, function(int $key) use($table, $condition): bool {
-            foreach($condition as $k => $cond) {
-                if(!is_null($cond) && !$cond->check($this->memory[$table][$key][$k] ?? null)) {
+        return array_values(array_filter($keys, function (int $key) use ($table, $condition): bool {
+            foreach ($condition as $k => $cond) {
+                if (!is_null($cond) && !$cond->check($this->memory[$table][$key][$k] ?? null)) {
                     return false;
                 }
             }
             return true;
         }));
-
     }
 
     /**
@@ -61,7 +59,11 @@ class MemoryDriver implements PhlumDriver
      */
     public function update(string $table, int $id, array $data): void
     {
-        $this->memory[$table][$id] = array_replace($this->memory[$table][$id] ?? [], $data);
+        if (!array_key_exists($id, $this->memory[$table] ?? [])) {
+            throw new \RuntimeException("Cannot update record not in table");
+        }
+        $newRow = array_values(array_replace($this->memory[$table][$id] ?? [], $data));
+        $this->memory[$table] = array_values(array_replace($this->memory[$table], [$id => $newRow]));
     }
 
     /**
@@ -71,7 +73,7 @@ class MemoryDriver implements PhlumDriver
      */
     public function updateMany(string $table, array $condition, array $data): void
     {
-        foreach($this->readMany($table, $condition) as $id) {
+        foreach ($this->readMany($table, $condition) as $id) {
             $this->update($table, $id, $data);
         }
     }
@@ -82,7 +84,10 @@ class MemoryDriver implements PhlumDriver
      */
     public function delete(string $table, int $id): void
     {
-        $this->memory[$table][$id] = null;
+        if (!array_key_exists($id, $this->memory[$table] ?? [])) {
+            throw new \RuntimeException("Cannot delete record not in table");
+        }
+        $this->memory[$table] = array_values(array_replace($this->memory[$table], [$id => null]));
     }
 
     /**
@@ -91,7 +96,7 @@ class MemoryDriver implements PhlumDriver
      */
     public function deleteMany(string $table, array $condition): void
     {
-        foreach($this->readMany($table, $condition) as $id) {
+        foreach ($this->readMany($table, $condition) as $id) {
             $this->delete($table, $id);
         }
     }

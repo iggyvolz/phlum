@@ -33,11 +33,21 @@ class HelperGenerator implements Stringable
         $trait = $namespace->addClass($classname)->setTrait();
         // Add protected constructor
         $constructor = $trait->addMethod("__construct")->setPrivate();
-        $attrs = (new ReflectionClass($this->class))->getAttributes(TableReference::class, ReflectionAttribute::IS_INSTANCEOF);
-        if(empty($attrs)) {
+        $attrs = (new ReflectionClass($this->class))->getAttributes(
+            TableReference::class,
+            ReflectionAttribute::IS_INSTANCEOF
+        );
+        if (empty($attrs)) {
             throw new \LogicException("No TableReference specified on " . $this->class);
         }
-        $schema = $attrs[0]->newInstance()->table;
+        /**
+         * @var TableReference $tableRef
+         */
+        $tableRef = $attrs[0]->newInstance();
+        $schema = $tableRef->table;
+        if (!is_subclass_of($schema, PhlumTable::class)) {
+            throw new \LogicException("Invalid schema $schema");
+        }
         $constructor->addPromotedParameter("schema")->setType($schema)->setProtected();
         // Add create method
         $create = $trait->addMethod("create")->setPublic()->setStatic()->setReturnType("static");
@@ -47,7 +57,9 @@ class HelperGenerator implements Stringable
         $get = $trait->addMethod("get")->setPublic()->setStatic()->setReturnType("static");
         $get->addParameter("driver")->setType(PhlumDriver::class);
         $get->addParameter("id")->setType("int");
-        $get->addBody("return \\$schema::get(\$driver, \$id)->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
+        $get->addBody(
+            "return \\$schema::get(\$driver, \$id)->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));"
+        );
         // Add getId method
         $getId = $trait->addMethod("getId")->setPublic()->setReturnType("int");
         $getId->addBody("return \$this->schema->getId();");
@@ -55,30 +67,31 @@ class HelperGenerator implements Stringable
         /**
          * @var \ReflectionProperty $property
          */
-        foreach($schema::getProperties() as $property) {
+        foreach ($schema::getProperties() as $property) {
             $propertyName = $property->getName();
             $upperPropertyName = ucfirst($propertyName);
             $access = Access::get($property);
             $getter = $trait->addMethod("get$upperPropertyName");
-            $getter->setReturnType($property->getType()->__toString() ?? null);
+            $getter->setReturnType($property->getType()?->__toString());
             $getter->setBody("return \$this->schema->$propertyName;");
             $access->applyGetter($getter);
             $setter = $trait->addMethod("set$upperPropertyName");
-            $setter->addParameter("val")->setType($property->getType()->__toString() ?? null);
+            $setter->addParameter("val")->setType($property->getType()?->__toString());
             $access->applySetter($setter);
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
-            $create->addParameter($propertyName)->setType($property->getType()->__toString());
-            $create->addBody("    '$propertyName' => \$$propertyName,");
+            $create->addParameter($propertyName)->setType($property->getType()?->__toString());
+            $create->addBody("    \$$propertyName,");
         }
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
         return $file;
     }
+
+    /**
+     * @phan-suppress PhanPossiblyFalseTypeReturn
+     *  -> https://github.com/phan/phan/issues/4335
+     */
     public function __toString(): string
     {
-        $result = substr((new PsrPrinter())->printFile($this->contents), strlen("<?php\n"));
-        if($result === false) {
-            throw new \LogicException();
-        }
-        return $result;
+        return substr((new PsrPrinter())->printFile($this->contents), strlen("<?php\n"));
     }
 }

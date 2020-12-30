@@ -1,8 +1,6 @@
 <?php
 
-
 namespace iggyvolz\phlum;
-
 
 abstract class Condition
 {

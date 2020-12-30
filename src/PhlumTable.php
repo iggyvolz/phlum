@@ -15,20 +15,25 @@ use WeakReference;
 
 abstract class PhlumTable
 {
+    private static function isAbstract(): bool
+    {
+        return (new ReflectionClass(static::class))->isAbstract();
+    }
+
     public function getId(): int
     {
         return $this->id;
     }
     final public function __construct(private PhlumDriver $driver, private int $id) {}
     /**
-     * @return list<ReflectionProperty>
+     * @return array<string,ReflectionProperty>
      */
     public static function getProperties(): array
     {
         $refl = new ReflectionClass(static::class);
         // Filter out $id
-        $props = array_filter($refl->getProperties(), fn(ReflectionProperty $rp) => $rp->getDeclaringClass()->getName() === static::class);
-        $propNames = array_map(fn(ReflectionProperty $prop) => $prop->getName(), $props);
+        $props = array_filter($refl->getProperties(), fn(ReflectionProperty $rp): bool => $rp->getDeclaringClass()->getName() === static::class);
+        $propNames = array_map(fn(ReflectionProperty $prop): string => $prop->getName(), $props);
         return array_combine($propNames, $props);
     }
     private static function getTableName(): string
@@ -59,12 +64,22 @@ abstract class PhlumTable
         $objects[static::class][$object->id] = WeakReference::create($object);
         self::$objects->offsetSet($driver, $objects);
     }
+
+    /**
+     * @param PhlumDriver $driver
+     * @param array<string,mixed> $props
+     * @return static
+     * @phan-suppress PhanTypeInstantiateAbstractStatic
+     */
     public static function create(PhlumDriver $driver, array $props): static
     {
+        if(static::isAbstract()) {
+            throw new \LogicException("Cannot call PhlumTable::get on abstract class");
+        }
         foreach($props as $key => &$value) {
             $value = self::getTransformer(static::getProperties()[$key])->from($driver, $value);
         }
-        $self = new static($driver, $driver->create(static::getTableName(), $props));
+        $self = new static($driver, $driver->create(static::getTableName(), array_values($props)));
         foreach(static::getProperties() as $property) {
             $property->setAccessible(true);
             $property->setValue($self, self::getTransformer($property)->to($driver, $props[$property->getName()]));
@@ -72,15 +87,25 @@ abstract class PhlumTable
         static::setObject($driver, $self);
         return $self;
     }
+
+    /**
+     * @param PhlumDriver $driver
+     * @param int $id
+     * @return static
+     * @phan-suppress PhanTypeInstantiateAbstractStatic
+     */
     public static function get(PhlumDriver $driver, int $id): static
     {
+        if(static::isAbstract()) {
+            throw new \LogicException("Cannot call PhlumTable::get on abstract class");
+        }
         $self = static::getObject($driver, $id);
         if(is_null($self)) {
             $self = new static($driver, $id);
             $props = $driver->read(static::getTableName(), $id);
-            foreach(static::getProperties() as $property) {
+            foreach(array_values(static::getProperties()) as $i => $property) {
                 $property->setAccessible(true);
-                $property->setValue($self, self::getTransformer($property)->to($driver, $props[$property->getName()]));
+                $property->setValue($self, self::getTransformer($property)->to($driver, $props[$i]));
             }
         }
         return $self;
@@ -89,7 +114,7 @@ abstract class PhlumTable
     {
         $props = [];
         foreach(static::getProperties() as $property) {
-            $props[$property->getName()] = self::getTransformer($property)->from($this->driver, $property->getValue($this));
+            $props[] = self::getTransformer($property)->from($this->driver, $property->getValue($this));
         }
         $this->driver->update(static::getTableName(), $this->id, $props);
     }
@@ -114,13 +139,14 @@ abstract class PhlumTable
     private static ?WeakMap $transformerMap = null;
     private static function getTransformer(ReflectionProperty $property): Transformer
     {
-        if(is_null(self::$transformerMap)) {
-            self::$transformerMap = new WeakMap();
+        $transformerMap = self::$transformerMap;
+        if(is_null($transformerMap)) {
+            $transformerMap = self::$transformerMap = new WeakMap();
         }
-        if(!self::$transformerMap->offsetExists($property)) {
-            self::$transformerMap->offsetSet($property, self::getTransformerForType($property->getType()));
+        if(!$transformerMap->offsetExists($property)) {
+            $transformerMap->offsetSet($property, self::getTransformerForType($property->getType()));
         }
-        return self::$transformerMap->offsetGet($property);
+        return $transformerMap->offsetGet($property);
     }
 
     private static function getTransformerForType(ReflectionType $property): Transformer

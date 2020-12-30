@@ -10,8 +10,9 @@ use Nette\PhpGenerator\PhpFile;
 use Nette\PhpGenerator\PsrPrinter;
 use iggyvolz\phlum\Attributes\Access;
 use iggyvolz\phlum\Attributes\TableReference;
+use Stringable;
 
-class HelperGenerator
+class HelperGenerator implements Stringable
 {
     private PhpFile $contents;
     /**
@@ -32,7 +33,11 @@ class HelperGenerator
         $trait = $namespace->addClass($classname)->setTrait();
         // Add protected constructor
         $constructor = $trait->addMethod("__construct")->setPrivate();
-        $schema = (new ReflectionClass($this->class))->getAttributes(TableReference::class, ReflectionAttribute::IS_INSTANCEOF)[0]->newInstance()->table;
+        $attrs = (new ReflectionClass($this->class))->getAttributes(TableReference::class, ReflectionAttribute::IS_INSTANCEOF);
+        if(empty($attrs)) {
+            throw new \LogicException("No TableReference specified on " . $this->class);
+        }
+        $schema = $attrs[0]->newInstance()->table;
         $constructor->addPromotedParameter("schema")->setType($schema)->setProtected();
         // Add create method
         $create = $trait->addMethod("create")->setPublic()->setStatic()->setReturnType("static");
@@ -70,6 +75,10 @@ class HelperGenerator
     }
     public function __toString(): string
     {
-        return (new PsrPrinter())->printFile($this->contents);
+        $result = substr((new PsrPrinter())->printFile($this->contents), strlen("<?php\n"));
+        if($result === false) {
+            throw new \LogicException();
+        }
+        return $result;
     }
 }

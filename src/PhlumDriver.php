@@ -33,13 +33,13 @@ interface PhlumDriver
     /**
      * @param string $table
      * @param int $id
-     * @param list<string|int|float|null> $data
+     * @param array<int, string|int|float|null> $data
      */
     public function update(string $table, int $id, array $data): void;
     /**
      * @param string $table
      * @param list<?Condition> $condition
-     * @param list<string|int|float|null> $data
+     * @param array<int, string|int|float|null> $data
      */
     public function updateMany(string $table, array $condition, array $data): void;
 
@@ -48,6 +48,7 @@ interface PhlumDriver
      * @param int $id
      */
     public function delete(string $table, int $id): void;
+
     /**
      * @param string $table
      * @param list<?Condition> $condition

@@ -6,9 +6,15 @@ namespace iggyvolz\phlum;
 class MemoryDriver implements PhlumDriver
 {
     /**
-     * @var array<string,list<array<string,int|string|float|null>|null>>>
+     * @var array<string,list<list<int|string|float|null>|null>>
      */
     private array $memory = [];
+
+    /**
+     * @param string $table
+     * @param list<string|int|float|null> $data
+     * @return int
+     */
     public function create(string $table, array $data): int
     {
         if(!array_key_exists($table, $this->memory)) {
@@ -19,6 +25,11 @@ class MemoryDriver implements PhlumDriver
         return $id;
     }
 
+    /**
+     * @param string $table
+     * @param int $id
+     * @return list<string|int|float|null>
+     */
     public function read(string $table, int $id): array
     {
         return $this->memory[$table][$id] ?? throw new \RuntimeException("Index out of range $id for $table");
@@ -32,22 +43,32 @@ class MemoryDriver implements PhlumDriver
     public function readMany(string $table, array $condition): array
     {
         $keys = array_keys($this->memory[$table]);
-        return array_filter($keys, function(int $key) use($table, $condition): bool {
+        return array_values(array_filter($keys, function(int $key) use($table, $condition): bool {
             foreach($condition as $k => $cond) {
-                if(!is_null($cond) && !$cond->check($this->memory[$table][$key][$k])) {
+                if(!is_null($cond) && !$cond->check($this->memory[$table][$key][$k] ?? null)) {
                     return false;
                 }
             }
             return true;
-        });
+        }));
 
     }
 
+    /**
+     * @param string $table
+     * @param int $id
+     * @param array<int, string|int|float|null> $data
+     */
     public function update(string $table, int $id, array $data): void
     {
-        $this->memory[$table][$id] = array_merge($this->memory[$table][$id], $data);
+        $this->memory[$table][$id] = array_replace($this->memory[$table][$id] ?? [], $data);
     }
 
+    /**
+     * @param string $table
+     * @param list<?Condition> $condition
+     * @param array<int, string|int|float|null> $data
+     */
     public function updateMany(string $table, array $condition, array $data): void
     {
         foreach($this->readMany($table, $condition) as $id) {
@@ -55,11 +76,19 @@ class MemoryDriver implements PhlumDriver
         }
     }
 
+    /**
+     * @param string $table
+     * @param int $id
+     */
     public function delete(string $table, int $id): void
     {
         $this->memory[$table][$id] = null;
     }
 
+    /**
+     * @param string $table
+     * @param list<?Condition> $condition
+     */
     public function deleteMany(string $table, array $condition): void
     {
         foreach($this->readMany($table, $condition) as $id) {

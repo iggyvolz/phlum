@@ -28,11 +28,19 @@ spl_autoload_register(function(string $class) {
     }
 }, prepend: true);
 
-HelperGeneratorFactory::register();
+//HelperGeneratorFactory::register();
 // Require all classes in chosen directory to force helper generation
 $dir = $argv[1];
 
 $it = new RegexIterator(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir)), '/^.+\.php$/i', RecursiveRegexIterator::GET_MATCH);
 foreach($it as $f => $_) {
     require_once $f;
+}
+
+HelperGeneratorFactory::register();
+foreach(get_declared_traits() as $class) {
+    if(str_ends_with($class, "_phlum")) {
+        // Generate the actual class
+        \iggyvolz\classgen\ClassGenerator::autoload($class);
+    }
 }

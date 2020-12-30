@@ -18,7 +18,7 @@ class PassthroughTransformer implements Transformer
         return $val;
     }
 
-    function to(PhlumDriver $driver, float|int|string|null $val): float|null|int|string
+    function to(PhlumDriver $driver, float|int|string|null $val): mixed
     {
         return $val;
     }

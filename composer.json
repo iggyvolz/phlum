@@ -3,7 +3,10 @@
     "description": "Simple PHP framework",
     "type": "library",
     "require-dev": {
-        "phpunit/phpunit": "^9.5"
+        "phpunit/phpunit": "^9.5",
+        "phan/phan": "^4.0",
+        "squizlabs/php_codesniffer": "dev-master",
+        "vimeo/psalm": "^4.3"
     },
     "license": "MIT",
     "authors": [

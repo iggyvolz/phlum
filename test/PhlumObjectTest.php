@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 class PhlumObjectTest extends TestCase
 {
-    private PhlumDriver $db;
+    private PhlumDriver $driver;
     public function setUp(): void
     {
         $this->driver = new MemoryDriver();

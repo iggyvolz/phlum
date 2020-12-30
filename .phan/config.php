@@ -9,19 +9,21 @@ return [
         "vendor/phan/phan/.phan/plugins/UnusedSuppressionPlugin.php",
         "vendor/phan/phan/.phan/plugins/DuplicateArrayKeyPlugin.php"
     ],
-    "allow_missing_properties" => false,
-    "allow_method_param_type_widening" => true,
-    "null_casts_as_any_type" => false,
-    'backward_compatibility_checks' => false,
-    "quick_mode" => true,
+    "strict_method_checking" => true,
+    "strict_object_checking" => true,
+    "strict_param_checking" => true,
+    "strict_property_checking" => true,
+    "strict_return_checking" => true,
+    "constant_variable_detection" => true,
     "minimum_severity" => 0,
-    'directory_list' => [ '.' ],
+    'directory_list' => [ 'src', 'vendor' ],
     "exclude_analysis_directory_list" => [
         'vendor',
     ],
+    "exclude_file_regex" => "@vendor/.*/stubs/@",
     "minimum_target_php_version" => "8.0",
     "suppress_issue_types" => [
-        // minimum_target_php_version isn't working for this
-        "PhanCompatibleConstructorPropertyPromotion"
+        // https://github.com/phan/phan/issues/4334
+        "PhanInvalidConstantExpression"
     ]
 ];

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum;
 
+use JetBrains\PhpStorm\ArrayShape;
 use ReflectionClass;
 use ReflectionAttribute;
 use Nette\PhpGenerator\PhpFile;
 use Nette\PhpGenerator\PsrPrinter;
 use iggyvolz\phlum\Attributes\Access;
 use iggyvolz\phlum\Attributes\TableReference;
+use ReflectionType;
 use Stringable;
 
 class HelperGenerator implements Stringable
@@ -63,6 +65,12 @@ class HelperGenerator implements Stringable
         // Add getId method
         $getId = $trait->addMethod("getId")->setPublic()->setReturnType("int");
         $getId->addBody("return \$this->schema->getId();");
+        // Add getAll method
+        $getAll = $trait->addMethod("getAll")->setPublic()->setStatic()->setReturnType("array");
+        $getAll->addParameter("driver")->setType(PhlumDriver::class);
+        $getAll->addBody("return array_map(fn(\\$schema \$val): static => \$val->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema)), \\$schema::getMany(\$driver, array_filter([");
+        $getAllParam = $getAll->addParameter("condition")->setType('array')->setDefaultValue([]);
+        $arrayShape = [];
         // Add getters and setters for properties
         /**
          * @var \ReflectionProperty $property
@@ -70,20 +78,39 @@ class HelperGenerator implements Stringable
         foreach ($schema::getProperties() as $property) {
             $propertyName = $property->getName();
             $upperPropertyName = ucfirst($propertyName);
+            $propertyType = self::getTypeName($property->getType());
             $access = Access::get($property);
             $getter = $trait->addMethod("get$upperPropertyName");
-            $getter->setReturnType($property->getType()?->__toString());
+            $getter->setReturnType($propertyType);
             $getter->setBody("return \$this->schema->$propertyName;");
             $access->applyGetter($getter);
             $setter = $trait->addMethod("set$upperPropertyName");
-            $setter->addParameter("val")->setType($property->getType()?->__toString());
+            $setter->addParameter("val")->setType($propertyType);
             $access->applySetter($setter);
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
-            $create->addParameter($propertyName)->setType($property->getType()?->__toString());
+            $create->addParameter($propertyName)->setType($propertyType);
             $create->addBody("    \$$propertyName,");
+            $arrayShape[$propertyName] = Condition::class;
+            $getAll->addBody("    \$condition['$propertyName'] ?? null,");
         }
+//        $getAllParam->addAttribute(ArrayShape::class, [$arrayShape]);
+        $getAll->addBody("], fn(\$x) => !is_null(\$x))));");
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
         return $file;
+    }
+
+    private static function getTypeName(?ReflectionType $type): string
+    {
+        if(is_null($type)) {
+            throw new \RuntimeException("Illegal untyped property");
+        }
+        if($type instanceof \ReflectionNamedType) {
+            return $type->getName();
+        }
+        if($type instanceof \ReflectionUnionType) {
+            return implode("|", array_map(fn(ReflectionType $t): string => self::getTypeName($t), $type->getTypes()));
+        }
+        throw new \LogicException("Unknown reflection type");
     }
 
     /**

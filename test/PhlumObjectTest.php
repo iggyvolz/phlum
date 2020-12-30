@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum\test;
 
+use iggyvolz\phlum\Conditions\EqualTo;
 use iggyvolz\phlum\MemoryDriver;
 use iggyvolz\phlum\PhlumDriver;
 use PHPUnit\Framework\TestCase;
@@ -58,5 +59,18 @@ class PhlumObjectTest extends TestCase
         $ref = TestObjectWithRef::get($this->driver, $refid);
         $this->assertSame($a, $ref->getReference()->getA());
         $this->assertSame($b, $ref->getReference()->getB());
+    }
+    public function testGetMany(): void
+    {
+        $x = TestObject::create(driver: $this->driver, a: $a = 1234, b: $b = 5678);
+        $y = TestObject::create(driver: $this->driver, a: $a = 1234, b: $b = 6789);
+        $z = TestObject::create(driver: $this->driver, a: $a = 2345, b: $b = 6789);
+        $result = TestObject::getAll(driver: $this->driver, condition: [
+            "a" => new EqualTo(1234),
+        ]);
+        $this->assertContains($x, $result);
+        $this->assertContains($y, $result);
+        $this->assertNotContains($z, $result);
+        $this->assertSame(2, count($result));
     }
 }

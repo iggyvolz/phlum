@@ -51,7 +51,8 @@ abstract class PhlumTable
      */
     private static ?WeakMap $objects = null;
     // phpcs:disable
-    private static function getObject(PhlumDriver $driver, int $id)
+    private static function getObject(PhlumDriver $driver, int $id): ?static
+    // phpcs:enable
     {
         $sobjects = self::$objects;
         if (is_null($sobjects)) {
@@ -127,7 +128,8 @@ abstract class PhlumTable
      * @phan-suppress PhanTypeInstantiateAbstractStatic
      */
     // phpcs:disable
-    public static function get(PhlumDriver $driver, int $id)
+    public static function get(PhlumDriver $driver, int $id): static
+    // phpcs:enable
     {
         if (static::isAbstract()) {
             throw new \LogicException("Cannot call PhlumTable::get on abstract class");
@@ -142,6 +144,22 @@ abstract class PhlumTable
             }
         }
         return $self;
+    }
+
+
+    /**
+     * @param PhlumDriver $driver
+     * @param array<int,Condition> $condition
+     * @return array<static>
+     */
+    // phpcs:disable
+    public static function getMany(PhlumDriver $driver, array $condition): array
+    // phpcs:enable
+    {
+        $ids = $driver->readMany(static::getTableName(), $condition);
+        // phpcs:disable
+        return array_map(fn(int $id): static => static::get($driver, $id), $ids);
+        // phpcs:enable
     }
     public function write(): void
     {

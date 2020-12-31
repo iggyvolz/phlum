@@ -60,7 +60,7 @@ class PhlumObjectTest extends TestCase
         $this->assertSame($a, $ref->getReference()->getA());
         $this->assertSame($b, $ref->getReference()->getB());
     }
-    public function testGetMany(): void
+    public function testGetAll(): void
     {
         $x = TestObject::create(driver: $this->driver, a: $a = 1234, b: $b = 5678);
         $y = TestObject::create(driver: $this->driver, a: $a = 1234, b: $b = 6789);
@@ -72,5 +72,26 @@ class PhlumObjectTest extends TestCase
         $this->assertContains($y, $result);
         $this->assertNotContains($z, $result);
         $this->assertSame(2, count($result));
+    }
+    public function testUpdateAll(): void
+    {
+        $x = TestObject::create(driver: $this->driver, a: $a = 1234, b: $b = 5678);
+        $y = TestObject::create(driver: $this->driver, a: $a = 1234, b: $b = 6789);
+        $z = TestObject::create(driver: $this->driver, a: $a = 2345, b: $b = 6789);
+        TestObject::updateAll(
+            driver: $this->driver,
+            condition: [
+                "a" => new EqualTo(1234),
+            ],
+            data: [
+                "b" => 7890
+            ]
+        );
+        $this->assertSame(1234, $x->getA());
+        $this->assertSame(1234, $y->getA());
+        $this->assertSame(2345, $z->getA());
+        $this->assertSame(7890, $x->getB());
+        $this->assertSame(7890, $y->getB());
+        $this->assertSame(6789, $z->getB());
     }
 }

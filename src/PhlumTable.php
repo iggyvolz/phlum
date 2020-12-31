@@ -98,7 +98,7 @@ abstract class PhlumTable
      * @phan-suppress PhanTypeInstantiateAbstractStatic
      */
     // phpcs:disable
-    public static function create(PhlumDriver $driver, array $props)
+    public static function create(PhlumDriver $driver, array $props): static
     {
     // phpcs:enable
         if (static::isAbstract()) {
@@ -125,11 +125,11 @@ abstract class PhlumTable
     /**
      * @param PhlumDriver $driver
      * @param int $id
-     * @return static
+     * @return static|null
      * @phan-suppress PhanTypeInstantiateAbstractStatic
      */
     // phpcs:disable
-    public static function get(PhlumDriver $driver, int $id)
+    public static function get(PhlumDriver $driver, int $id): ?static
     {
     // phpcs:enable
         if (static::isAbstract()) {
@@ -147,18 +147,68 @@ abstract class PhlumTable
         return $self;
     }
 
-
     /**
      * @param PhlumDriver $driver
      * @param list<?Condition> $condition
      * @return array<static>
      */
     // phpcs:disable
-    public static function getMany(PhlumDriver $driver, array $condition)
+    public static function getMany(PhlumDriver $driver, array $condition): array
     {
-    // phpcs:enable
-        $ids = $driver->readMany(static::getTableName(), $condition);
-        return array_map(fn(int $id): self => static::get($driver, $id), $ids);
+        // phpcs:enable
+        $ret = [];
+        foreach ($driver->readMany(static::getTableName(), $condition) as $id) {
+            $ret[] = static::get($driver, $id) ??
+                throw new \RuntimeException("Database returned invalid object");
+        }
+        return $ret;
+    }
+
+    /**
+     * @param PhlumDriver $driver
+     * @param list<?Condition> $condition
+     * @param array<int,mixed> $data
+     * @return void
+     */
+    // phpcs:disable
+    public static function updateMany(PhlumDriver $driver, array $condition, array $data): void
+    {
+        // phpcs:enable
+        $props = [];
+        foreach (static::getProperties() as $i => $property) {
+            if (array_key_exists($i, $data)) {
+                $props[$i] = self::getTransformer($property)->from($driver, $data[$i]);
+            }
+        }
+        $driver->updateMany(static::getTableName(), $condition, $props);
+        // Need to update local copies of objects
+
+        /**
+         * /var WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
+         */
+        //private static ?WeakMap $objects = null;
+        $sobjects = self::$objects;
+        if (is_null($sobjects)) {
+            return;
+        }
+        if (!$sobjects->offsetExists($driver)) {
+            return;
+        }
+        /**
+         * @var array<string, array<int, WeakReference<self>>> $objects
+         */
+        $objects = $sobjects->offsetGet($driver);
+        foreach ($objects[static::class] as $id => $obj) {
+            $self = $obj->get();
+            if (is_null($self)) {
+                continue; // This object does not exist, skip it
+            }
+            $props = $driver->read(static::getTableName(), $id);
+            foreach (static::getProperties() as $i => $property) {
+                $property->setAccessible(true);
+                $property->setValue($self, self::getTransformer($property)->to($driver, $props[$i]));
+            }
+        }
     }
     public function write(): void
     {

@@ -72,13 +72,17 @@ class HelperGenerator implements Stringable
             "return array_map(fn(\\$schema \$val): static => \$val->getPhlumObject(fn(\\$schema \$schema)" .
             " => new self(\$schema)), \\$schema::getMany(\$driver, ["
         );
-        $getAllParam = $getAll->addParameter("condition")->setType('array')->setDefaultValue([]);
-        $arrayShape = [];
+        $getAll->addParameter("condition")->setType('array')->setDefaultValue([]);
+//        $arrayShape = [];
+        // Add updateAll method
+        $updateAll = $trait->addMethod("updateAll")->setPublic()->setStatic()->setReturnType("void");
+        $updateAll->addParameter("driver")->setType(PhlumDriver::class);
+        $updateAll->addParameter("condition")->setType('array')->setDefaultValue([]);
+        $updateAll->addParameter("data")->setType('array')->setDefaultValue([]);
+        $updateAll->addBody('$_condition = [];');
+        $updateAll->addBody('$_data = [];');
         // Add getters and setters for properties
-        /**
-         * @var \ReflectionProperty $property
-         */
-        foreach ($schema::getProperties() as $property) {
+        foreach ($schema::getProperties() as $i => $property) {
             $propertyName = $property->getName();
             $upperPropertyName = ucfirst($propertyName);
             $propertyType = self::getTypeName($property->getType());
@@ -93,12 +97,15 @@ class HelperGenerator implements Stringable
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
             $create->addParameter($propertyName)->setType($propertyType);
             $create->addBody("    \$$propertyName,");
-            $arrayShape[$propertyName] = Condition::class;
+//            $arrayShape[$propertyName] = Condition::class;
             $getAll->addBody("    \$condition['$propertyName'] ?? null,");
+            $updateAll->addBody("\$_condition[] = \$condition['$propertyName'] ?? null;");
+            $updateAll->addBody("if(array_key_exists('$propertyName', \$data)) \$_data[$i] = \$data['$propertyName'];");
         }
 //        $getAllParam->addAttribute(ArrayShape::class, [$arrayShape]);
         $getAll->addBody("]));");
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
+        $updateAll->addBody("\\$schema::updateMany(\$driver, \$_condition, \$_data);");
         return $file;
     }
 

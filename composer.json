@@ -6,7 +6,8 @@
         "phpunit/phpunit": "^9.5",
         "phan/phan": "^4.0",
         "squizlabs/php_codesniffer": "dev-master",
-        "vimeo/psalm": "^4.3"
+        "vimeo/psalm": "^4.3",
+        "phpstan/phpstan": "^0.12.80"
     },
     "license": "MIT",
     "authors": [

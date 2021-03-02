@@ -27,6 +27,7 @@ class Access
             $property->isPublic() => self::PUBLIC,
             $property->isProtected() => self::PROTECTED,
             $property->isPrivate() => self::PRIVATE,
+            true => throw new \LogicException("Unknown access type on property")
         };
         return new self($accessLevel, $accessLevel);
     }
@@ -37,7 +38,11 @@ class Access
         if (empty($attributes)) {
             return self::getDefault($property);
         } else {
-            return $attributes[0]->newInstance();
+            /**
+             * @var self $instance
+             */
+            $instance = $attributes[0]->newInstance();
+            return $instance;
         }
     }
     public function applyGetter(Method $method): void

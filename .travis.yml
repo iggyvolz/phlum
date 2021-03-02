@@ -2,6 +2,8 @@ language: php
 php:
   - '8.0'
   - nightly
+before_install:
+  - pecl install ast
 install:
   - composer install
 script:

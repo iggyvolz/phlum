@@ -51,7 +51,7 @@ abstract class PhlumTable
     }
 
     /**
-     * /var WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
+     * @var null|WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
      */
     private static ?WeakMap $objects = null;
     // phpcs:disable
@@ -60,7 +60,11 @@ abstract class PhlumTable
     // phpcs:enable
         $sobjects = self::$objects;
         if (is_null($sobjects)) {
-            self::$objects = $sobjects = new WeakMap();
+            /**
+             * @var WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
+             */
+            $sobjects = new WeakMap();
+            self::$objects = $sobjects;
         }
         if (!$sobjects->offsetExists($driver)) {
             return null;
@@ -82,6 +86,9 @@ abstract class PhlumTable
     {
         $sobjects = self::$objects;
         if (is_null($sobjects)) {
+            /**
+             * @var WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
+             */
             self::$objects = $sobjects = new WeakMap();
         }
         /**
@@ -248,14 +255,18 @@ abstract class PhlumTable
     }
 
     /**
-     * /var WeakMap<ReflectionProperty,Transformer>|null
+     * @var WeakMap<ReflectionProperty,Transformer>|null
      */
-    private static ?WeakMap $transformerMap = null;
+    private static ?\WeakMap $transformerMap = null;
     private static function getTransformer(ReflectionProperty $property): Transformer
     {
         $transformerMap = self::$transformerMap;
         if (is_null($transformerMap)) {
-            $transformerMap = self::$transformerMap = new WeakMap();
+            /**
+             * @var WeakMap<ReflectionProperty,Transformer>
+             */
+            $transformerMap = new WeakMap();
+            self::$transformerMap = $transformerMap;
         }
         if ($transformerMap->offsetExists($property)) {
             /**

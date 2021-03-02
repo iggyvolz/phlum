@@ -5,4 +5,7 @@ php:
 install:
   - composer install
 script:
+  - vendor/bin/phan
+  - vendor/bin/psalm
+  - vendor/bin/phpcs
   - ./test.sh

@@ -28,17 +28,21 @@ abstract class PhlumTable
     {
     }
     /**
-     * @return list<ReflectionProperty>
+     * @return array<string, ReflectionProperty>
      */
     public static function getProperties(): array
     {
         $refl = new ReflectionClass(static::class);
         // Filter out $id
-        return array_values(
+        $props = array_values(
             array_filter(
                 $refl->getProperties(),
                 fn(ReflectionProperty $rp): bool => $rp->getDeclaringClass()->getName() === static::class
             )
+        );
+        return array_combine(
+            array_map(fn(ReflectionProperty $rp): string => $rp->getName(), $props),
+            $props
         );
     }
     private static function getTableName(): string
@@ -93,7 +97,7 @@ abstract class PhlumTable
 
     /**
      * @param PhlumDriver $driver
-     * @param list<mixed> $props
+     * @param array<string, mixed> $props
      * @return static
      * @phan-suppress PhanTypeInstantiateAbstractStatic
      */
@@ -111,7 +115,7 @@ abstract class PhlumTable
             $value = self::getTransformer(static::getProperties()[$key])->from($driver, $value);
         }
         /**
-         * @var list<float|int|null|string> $props
+         * @var array<string, float|int|null|string> $props
          */
         $self = new static($driver, $driver->create(static::getTableName(), $props));
         foreach (static::getProperties() as $i => $property) {
@@ -149,7 +153,7 @@ abstract class PhlumTable
 
     /**
      * @param PhlumDriver $driver
-     * @param list<?Condition> $condition
+     * @param array<string, Condition> $condition
      * @return array<static>
      */
     // phpcs:disable
@@ -166,8 +170,8 @@ abstract class PhlumTable
 
     /**
      * @param PhlumDriver $driver
-     * @param list<?Condition> $condition
-     * @param array<int,mixed> $data
+     * @param array<string, Condition> $condition
+     * @param array<string,mixed> $data
      * @return void
      */
     // phpcs:disable
@@ -205,8 +209,10 @@ abstract class PhlumTable
             }
             $props = $driver->read(static::getTableName(), $id);
             foreach (static::getProperties() as $i => $property) {
-                $property->setAccessible(true);
-                $property->setValue($self, self::getTransformer($property)->to($driver, $props[$i]));
+                if (array_key_exists($i, $props)) {
+                    $property->setAccessible(true);
+                    $property->setValue($self, self::getTransformer($property)->to($driver, $props[$i]));
+                }
             }
         }
     }
@@ -214,7 +220,10 @@ abstract class PhlumTable
     {
         $props = [];
         foreach (static::getProperties() as $property) {
-            $props[] = self::getTransformer($property)->from($this->driver, $property->getValue($this));
+            $props[$property->getName()] = self::getTransformer($property)->from(
+                $this->driver,
+                $property->getValue($this)
+            );
         }
         $this->driver->update(static::getTableName(), $this->id, $props);
     }

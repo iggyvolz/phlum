@@ -81,10 +81,10 @@ class PhlumObjectTest extends TestCase
         TestObject::updateAll(
             driver: $this->driver,
             condition: [
-                "a" => new EqualTo(1234),
+            "a" => new EqualTo(1234),
             ],
             data: [
-                "b" => 7890
+            "b" => 7890
             ]
         );
         $this->assertSame(1234, $x->getA());

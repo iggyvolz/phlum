@@ -6,7 +6,7 @@ interface PhlumDriver
 {
     /**
      * @param string $table
-     * @param list<string|int|float|null> $data
+     * @param array<string, string|int|float|null> $data
      * @return int
      */
     public function create(string $table, array $data): int;
@@ -14,13 +14,13 @@ interface PhlumDriver
     /**
      * @param string $table
      * @param int $id
-     * @return list<string|int|float|null>
+     * @return array<string, string|int|float|null>
      */
     public function read(string $table, int $id): array;
 
     /**
      * @param string $table
-     * @param list<?Condition> $condition
+     * @param array<string, Condition> $condition
      * @return list<int>
      */
     public function readMany(
@@ -31,13 +31,13 @@ interface PhlumDriver
     /**
      * @param string $table
      * @param int $id
-     * @param array<int, string|int|float|null> $data
+     * @param array<string, string|int|float|null> $data
      */
     public function update(string $table, int $id, array $data): void;
     /**
      * @param string $table
-     * @param list<?Condition> $condition
-     * @param array<int, string|int|float|null> $data
+     * @param array<string, Condition> $condition
+     * @param array<string, string|int|float|null> $data
      */
     public function updateMany(string $table, array $condition, array $data): void;
 
@@ -49,7 +49,7 @@ interface PhlumDriver
 
     /**
      * @param string $table
-     * @param list<?Condition> $condition
+     * @param array<string, Condition> $condition
      */
     public function deleteMany(string $table, array $condition): void;
 }

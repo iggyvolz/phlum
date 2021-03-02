@@ -70,7 +70,7 @@ class HelperGenerator implements Stringable
         $getAll->addParameter("driver")->setType(PhlumDriver::class);
         $getAll->addBody(
             "return array_map(fn(\\$schema \$val): static => \$val->getPhlumObject(fn(\\$schema \$schema)" .
-            " => new self(\$schema)), \\$schema::getMany(\$driver, ["
+            " => new self(\$schema)), \\$schema::getMany(\$driver, array_filter(["
         );
         $getAll->addParameter("condition")->setType('array')->setDefaultValue([]);
 //        $arrayShape = [];
@@ -96,14 +96,20 @@ class HelperGenerator implements Stringable
             $access->applySetter($setter);
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
             $create->addParameter($propertyName)->setType($propertyType);
-            $create->addBody("    \$$propertyName,");
+            $create->addBody("    " . var_export($propertyName, true) . " => \$$propertyName,");
 //            $arrayShape[$propertyName] = Condition::class;
-            $getAll->addBody("    \$condition['$propertyName'] ?? null,");
-            $updateAll->addBody("\$_condition[] = \$condition['$propertyName'] ?? null;");
-            $updateAll->addBody("if(array_key_exists('$propertyName', \$data)) \$_data[$i] = \$data['$propertyName'];");
+            $getAll->addBody("    '$propertyName' => \$condition['$propertyName'] ?? null,");
+            $updateAll->addBody(
+                "if(array_key_exists('$propertyName', \$condition)) " .
+                "\$_condition['$i'] = \$condition['$propertyName'];"
+            );
+            $updateAll->addBody(
+                "if(array_key_exists('$propertyName', \$data)) " .
+                "\$_data['$i'] = \$data['$propertyName'];"
+            );
         }
 //        $getAllParam->addAttribute(ArrayShape::class, [$arrayShape]);
-        $getAll->addBody("]));");
+        $getAll->addBody("])));");
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
         $updateAll->addBody("\\$schema::updateMany(\$driver, \$_condition, \$_data);");
         return $file;
@@ -123,10 +129,6 @@ class HelperGenerator implements Stringable
         throw new \LogicException("Unknown reflection type");
     }
 
-    /**
-     * @phan-suppress PhanPossiblyFalseTypeReturn
-     *  -> https://github.com/phan/phan/issues/4335
-     */
     public function __toString(): string
     {
         return substr((new PsrPrinter())->printFile($this->contents), strlen("<?php\n"));

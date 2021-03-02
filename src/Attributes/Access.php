@@ -23,7 +23,7 @@ class Access
     #[Description("Gets a default access level given a Phlum property")]
     private static function getDefault(ReflectionProperty $property): self
     {
-        $accessLevel = match(true) {
+        $accessLevel = match (true) {
             $property->isPublic() => self::PUBLIC,
             $property->isProtected() => self::PROTECTED,
             $property->isPrivate() => self::PRIVATE,

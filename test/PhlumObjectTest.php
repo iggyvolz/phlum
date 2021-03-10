@@ -19,7 +19,8 @@ class PhlumObjectTest extends TestCase
     public function testCreateAndRead(): void
     {
         $x = TestObject::create(driver: $this->driver, a: $a = 1234, b: $b = 5678);
-        $y = TestObject::get($this->driver, 0);
+        $xId = $x->getId();
+        $y = TestObject::get($this->driver, $xId);
         $this->assertSame($x, $y);
         $this->assertSame($a, $x->getA());
         $this->assertSame($b, $x->getb());
@@ -28,20 +29,21 @@ class PhlumObjectTest extends TestCase
         unset($y);
         // We should have lost all references to $x and $y
         $this->assertNull($wr->get());
-        $z = TestObject::get($this->driver, 0);
+        $z = TestObject::get($this->driver, $xId);
         $this->assertSame($a, $z->getA());
         $this->assertSame($b, $z->getb());
     }
     public function testUpdate(): void
     {
         $x = TestObject::create(driver: $this->driver, a: $a = 1234, b: $b = 5678);
+        $xId = $x->getId();
         $x->setA($a = 6789);
         $this->assertSame($a, $x->getA());
         $wr = \WeakReference::create($x);
         unset($x);
         // We should have lost all references to $x
         $this->assertNull($wr->get());
-        $y = TestObject::get($this->driver, 0);
+        $y = TestObject::get($this->driver, $xId);
         $this->assertSame($a, $y->getA());
     }
     public function testRef(): void

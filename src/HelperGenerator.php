@@ -121,7 +121,7 @@ class HelperGenerator implements Stringable
             throw new \RuntimeException("Illegal untyped property");
         }
         if ($type instanceof \ReflectionNamedType) {
-            return $type->getName();
+            return $type->getName() . ($type->allowsNull() ? "|null" : "");
         }
         if ($type instanceof \ReflectionUnionType) {
             return implode("|", array_map(fn(ReflectionType $t): string => self::getTypeName($t), $type->getTypes()));

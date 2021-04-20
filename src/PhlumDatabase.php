@@ -6,8 +6,6 @@ namespace iggyvolz\phlum;
 
 use iggyvolz\lmdb\Environment;
 use iggyvolz\lmdb\LMDB;
-use Ramsey\Uuid\Lazy\LazyUuidFromString;
-use Ramsey\Uuid\Nonstandard\UuidV6;
 use Ramsey\Uuid\Provider\Node\StaticNodeProvider;
 use Ramsey\Uuid\Rfc4122\Fields;
 use Ramsey\Uuid\Rfc4122\FieldsInterface;
@@ -74,7 +72,7 @@ class PhlumDatabase
     private function register(): void
     {
         foreach ($this->classes as $class) {
-            self::$databases[$db = $this->getNodeProvider($class)->getNode()->toString()] = $this;
+            self::$databases[$this->getNodeProvider($class)->getNode()->toString()] = $this;
         }
     }
 
@@ -83,6 +81,12 @@ class PhlumDatabase
         return self::$databases[$node] ?? null;
     }
 
+    /**
+     * @param string $directory
+     * @param list<class-string<PhlumTable>> $classes
+     * @param UuidInterface|null $uuid
+     * @return self
+     */
     public static function initialize(string $directory, array $classes, UuidInterface $uuid = null): self
     {
         $uuid ??= Uuid::uuid4();
@@ -141,19 +145,12 @@ class PhlumDatabase
 
     /**
      * @param class-string<PhlumTable> $class
-     * @return UuidV6
+     * @return UuidInterface
      */
-    public function getUuid(string $class): UuidV6
+    public function getUuid(string $class): UuidInterface
     {
         $nodeProvider = $this->getNodeProvider($class);
-        $uuid = Uuid::uuid6($nodeProvider->getNode());
-        if ($uuid instanceof LazyUuidFromString) {
-            $uuid = $uuid->toUuidV6();
-        }
-        if (!$uuid instanceof UuidV6) {
-            throw new \LogicException();
-        }
-        return $uuid;
+        return Uuid::uuid6($nodeProvider->getNode());
     }
 
     public function create(PhlumTable $object): void
@@ -162,7 +159,7 @@ class PhlumDatabase
         $key = substr($object->getId()->getBytes(), 0, 11); // Last 5 characters is the node
         $transaction = $this->lmdb->newTransaction(false);
         $fields = $object->getId()->getFields();
-        if(!$fields instanceof FieldsInterface) {
+        if (!$fields instanceof FieldsInterface) {
             throw new \LogicException();
         }
         $transaction->getHandle($fields->getNode()->toString(), LMDB::CREATE)->put($key, $data);

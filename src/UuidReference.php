@@ -1,8 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
 namespace iggyvolz\phlum;
-
 
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -14,7 +14,7 @@ class UuidReference
     {
     }
 
-    public static function fromUuid(UuidInterface $val)
+    public static function fromUuid(UuidInterface $val): self
     {
         return new self($val->getBytes());
     }

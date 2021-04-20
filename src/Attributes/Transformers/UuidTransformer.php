@@ -3,8 +3,6 @@
 namespace iggyvolz\phlum\Attributes\Transformers;
 
 use iggyvolz\phlum\Attributes\Transformer;
-use iggyvolz\phlum\PhlumObject;
-use iggyvolz\phlum\PhlumObjectReference;
 use iggyvolz\phlum\UuidReference;
 use Ramsey\Uuid\UuidInterface;
 

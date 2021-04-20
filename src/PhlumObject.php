@@ -73,9 +73,6 @@ abstract class PhlumObject
     private static function getObjectClass(string $tableClass): string
     {
         foreach (get_declared_classes() as $class) {
-            /**
-             * @phpstan-var class-string<self> $class
-             */
             if (is_subclass_of($class, self::class)) {
                 $parameter = (new ReflectionClass($class))->getConstructor()?->getParameters()[0] ?? null;
                 $childClass = $parameter?->getType();
@@ -88,8 +85,19 @@ abstract class PhlumObject
     }
 
     abstract public function getId(): UuidInterface;
+
+    /**
+     * @return array<mixed,mixed>
+     */
     abstract public function __serialize(): array;
+    /**
+     * @param array<mixed,mixed> $data
+     */
     abstract public function __unserialize(array $data): void;
+
+    /**
+     * @psalm-suppress InvalidPropertyAssignmentValue ???
+     */
     protected function register(): void
     {
         self::$references[$this->getId()->getBytes()] = \WeakReference::create($this);
@@ -111,11 +119,10 @@ abstract class PhlumObject
     public function __destruct()
     {
         $ref = self::$references[$this->getId()->getBytes()] ?? null;
-        if($ref && $ref->get() === $this)
-        {
+        if ($ref && $ref->get() === $this) {
             unset(self::$references[$this->getId()->getBytes()]);
         }
     }
 
-    public abstract function getSchema(): PhlumTable;
+    abstract public function getSchema(): PhlumTable;
 }

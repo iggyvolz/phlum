@@ -6,7 +6,6 @@ namespace iggyvolz\phlum;
 
 use iggyvolz\phlum\Attributes\Transformers\PhlumObjectTransformer;
 use iggyvolz\phlum\Attributes\Transformers\UuidTransformer;
-use Ramsey\Uuid\Nonstandard\UuidV6;
 use Ramsey\Uuid\Rfc4122\Fields;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
@@ -118,13 +117,15 @@ abstract class PhlumTable
      * @template T of PhlumObject
      * @param callable(PhlumTable):T $creation
      * @return T
+     * @phan-suppress PhanTypeMismatchDeclaredReturn, PhanNonClassMethodCall
      */
     public function getPhlumObject(callable $creation): PhlumObject
     {
-        $existingObject = (self::$phlumObjects?->offsetExists($this) ? self::$phlumObjects?->offsetGet($this) : null);
         /**
-         * @var T|null $existingObject
+         * @var WeakReference<T>|null $existingObject
+         * @phan-var WeakReference<PhlumObject>|null $existingObject
          */
+        $existingObject = (self::$phlumObjects?->offsetExists($this) ? self::$phlumObjects?->offsetGet($this) : null);
         $existingObject = $existingObject?->get();
         if ($existingObject) {
             return $existingObject;
@@ -138,43 +139,69 @@ abstract class PhlumTable
      * @template T of PhlumObject
      * @param callable(PhlumTable):T $creation
      * @return T
+     * @phan-suppress PhanTypeMismatchDeclaredReturn, PhanPossiblyNonClassMethodCall
      */
     private function realGetPhlumObject(callable $creation): PhlumObject
     {
         $object = $creation($this);
-        self::$phlumObjects ??= new WeakMap();
+        if (is_null(self::$phlumObjects)) {
+            /**
+             * @var WeakMap<PhlumTable,WeakReference<PhlumObject>> $newWeakMap
+             */
+            $newWeakMap = new WeakMap();
+            self::$phlumObjects = $newWeakMap;
+        }
         self::$phlumObjects->offsetSet($this, WeakReference::create($object));
         return $object;
     }
 
+    /**
+     * @return array<mixed,mixed>
+     */
     public function __serialize(): array
     {
-        return iterator_to_array((function () {
+        return iterator_to_array((/** @return \Generator<mixed,mixed> */function (): \Generator {
             foreach (self::getProperties() as $name => $reflectionProperty) {
                 $reflectionProperty->setAccessible(true);
                 $transformers = [
                     new PhlumObjectTransformer(),
                     new UuidTransformer(),
                 ];
+                /**
+                 * @var mixed $val
+                 */
                 $val = $reflectionProperty->getValue($this);
                 foreach ($transformers as $transformer) {
+                    /**
+                     * @var mixed $val
+                     */
                     $val = $transformer->from($val);
                 }
                 yield $name => $val;
             }
         })());
     }
+
+    /**
+     * @param array<mixed,mixed> $data
+     */
     public function __unserialize(array $data): void
     {
         foreach (self::getProperties() as $name => $reflectionProperty) {
             $reflectionProperty->setAccessible(true);
             if (array_key_exists($name, $data)) {
+                /**
+                 * @var mixed $val
+                 */
                 $val = $data[$name];
                 $transformers = [
                     new PhlumObjectTransformer(),
                     new UuidTransformer(),
                 ];
                 foreach ($transformers as $transformer) {
+                    /**
+                     * @var mixed $val
+                     */
                     $val = $transformer->to($val);
                 }
                 $reflectionProperty->setValue($this, $val);

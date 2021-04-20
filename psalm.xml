@@ -12,7 +12,7 @@
         </ignoreFiles>
     </projectFiles>
     <issueHandlers>
-        <!-- https://github.com/vimeo/psalm/issues/5311 -->
-        <TooManyTemplateParams errorLevel="suppress" />
+        <!-- Psalm complains about us @var'ing our ReflectionAttribute()->newInstance() calls, but phpstan needs it -->
+        <UnnecessaryVarAnnotation errorLevel="suppress" />
     </issueHandlers>
 </psalm>

@@ -1,14 +1,14 @@
 language: php
 php:
   - '8.0'
-  - nightly
+#  - nightly
 before_install:
   - pecl install ast
   - sudo apt-get install -y libffi-dev
 install:
-  - composer install
+  - php -dextension=./ffi.so `which composer` install
 script:
   - vendor/bin/phan
   - vendor/bin/psalm
   - vendor/bin/phpcs
-  - ./test.sh
+  - php -dextension=./ffi.so genhelpers.php test/ && XDEBUG_MODE=coverage php -dextension=./ffi.so vendor/bin/phpunit

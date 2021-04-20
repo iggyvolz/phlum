@@ -4,6 +4,7 @@ php:
   - nightly
 before_install:
   - pecl install ast
+  - sudo apt-get install -y libffi-dev
 install:
   - composer install
 script:

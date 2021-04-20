@@ -19,8 +19,8 @@
     "require": {
         "php": "^8.0",
         "nette/php-generator": "^3.5",
-        "iggyvolz/classgen": "dev-main",
-        "iggyvolz/lmdb": "dev-main",
+        "iggyvolz/classgen": "^0.1",
+        "iggyvolz/lmdb": "^0.2",
         "ramsey/uuid": "^4.1"
     },
     "autoload": {

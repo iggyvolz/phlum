@@ -5,7 +5,12 @@ php:
 before_install:
   - pecl install ast
   - sudo apt-get install -y libffi-dev
-  - cp ffi.so `php-config --extension-dir`
+# Hacky as hell: build FFI manually
+  - mkdir ffi
+  - cd ffi
+  - wget https://raw.githubusercontent.com/php/php-src/php-8.0.0/ext/ffi/{CREDITS,config.m4,config.w32,ffi.c,ffi.g,ffi.stub.php,ffi_arginfo.h,ffi_parser.c,php_ffi.h}
+  - phpize && ./configure && make && make install
+  - cd ..
 install:
   - php -dextension=ffi.so `which composer` install
 script:

@@ -8,6 +8,6 @@ use iggyvolz\phlum\PhlumTable;
 
 class TestTable extends PhlumTable
 {
-    public int $a;
+    public ?int $a;
     public int $b;
 }

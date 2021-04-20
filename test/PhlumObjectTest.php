@@ -42,7 +42,7 @@ class PhlumObjectTest extends TestCase
 
     public function testCreateAndRead(): void
     {
-        $x = TestObject::create(db: $this->db, a: $a = 1234, b: $b = 5678);
+        $x = TestObject::create(db: $this->db, a: $a = null, b: $b = 5678);
         $xId = $x->getId();
         $y = TestObject::get($xId);
         $this->assertSame($x, $y);

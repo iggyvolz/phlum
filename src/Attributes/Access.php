@@ -39,10 +39,10 @@ class Access
             return self::getDefault($property);
         } else {
             /**
-             * @var self $instance
+             * @phpstan-var Access $attribute
              */
-            $instance = $attributes[0]->newInstance();
-            return $instance;
+            $attribute = $attributes[0]->newInstance();
+            return $attribute;
         }
     }
     public function applyGetter(Method $method): void

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 use iggyvolz\phlum\HelperGeneratorFactory;
 
+require_once __DIR__ . "/vendor/autoload.php";
+
 // Add autoloader to generate a stub, so that PHP can compile the main class
 spl_autoload_register(function(string $class) {
     if(str_ends_with($class, "_phlum")) {
@@ -14,14 +16,11 @@ spl_autoload_register(function(string $class) {
             {
                 trait $classname
                 {
-                    public static function get(mixed \$driver, int \$id): static
-                    {
-                        throw new \\LogicException("Cannot call method on stub trait");
-                    }
-                    public function getId(): int
-                    {
-                        throw new \\LogicException("Cannot call method on stub trait");
-                    }
+                    public function getId(): \Ramsey\Uuid\UuidInterface { throw new \LogicException(); }
+                    public function __serialize(): array { throw new \LogicException(); }
+                    public function __unserialize(array \$data): void { throw new \LogicException(); }
+                    public static function getAll(\$node): iterable { throw new \LogicException(); }
+                    public function getSchema(): \iggyvolz\phlum\PhlumTable { throw new \LogicException(); }
                 }
             }
         EOT);

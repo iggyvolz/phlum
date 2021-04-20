@@ -5,19 +5,21 @@ namespace iggyvolz\phlum\Attributes\Transformers;
 use iggyvolz\phlum\Attributes\Transformer;
 use iggyvolz\phlum\PhlumObject;
 use iggyvolz\phlum\PhlumObjectReference;
+use iggyvolz\phlum\UuidReference;
+use Ramsey\Uuid\UuidInterface;
 
 /**
  * Transforms a PhlumObject into a PhlumObjectReference, to avoid recursive references in serialization
  */
-class PhlumObjectTransformer implements Transformer
+class UuidTransformer implements Transformer
 {
     public function from(mixed $val): mixed
     {
-        return $val instanceof PhlumObject ? $val->toReference() : $val;
+        return $val instanceof UuidInterface ? UuidReference::fromUuid($val) : $val;
     }
 
     public function to(mixed $val): mixed
     {
-        return $val instanceof PhlumObjectReference ? $val->toObject() : $val;
+        return $val instanceof UuidReference ? $val->toObject() : $val;
     }
 }

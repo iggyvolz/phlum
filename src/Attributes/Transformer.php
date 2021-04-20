@@ -2,10 +2,18 @@
 
 namespace iggyvolz\phlum\Attributes;
 
-use iggyvolz\phlum\PhlumDriver;
-
 interface Transformer
 {
-    public function from(PhlumDriver $driver, mixed $val): int|string|float|null;
-    public function to(PhlumDriver $driver, int|string|float|null $val): mixed;
+    /**
+     * Function called when the data is serialized
+     * @param mixed $val Value within PHP
+     * @return mixed Value to be passed to serialization function
+     */
+    public function from(mixed $val): mixed;
+    /**
+     * Function called when the data is unserialized
+     * @param mixed $val Value returned from unserialization function
+     * @return mixed Value to be returned
+     */
+    public function to(mixed $val): mixed;
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace iggyvolz\phlum;
 
 //use JetBrains\PhpStorm\ArrayShape;
+use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
 use ReflectionAttribute;
 use Nette\PhpGenerator\PhpFile;
@@ -34,7 +35,7 @@ class HelperGenerator implements Stringable
         $namespace = $file->addNamespace($namespaceName);
         $trait = $namespace->addClass($classname)->setTrait();
         // Add protected constructor
-        $constructor = $trait->addMethod("__construct")->setPrivate();
+        $constructor = $trait->addMethod("__construct")->setProtected();
         $attrs = (new ReflectionClass($this->class))->getAttributes(
             TableReference::class,
             ReflectionAttribute::IS_INSTANCEOF
@@ -43,7 +44,7 @@ class HelperGenerator implements Stringable
             throw new \LogicException("No TableReference specified on " . $this->class);
         }
         /**
-         * @var TableReference $tableRef
+         * @phpstan-var TableReference
          */
         $tableRef = $attrs[0]->newInstance();
         $schema = $tableRef->table;
@@ -51,38 +52,35 @@ class HelperGenerator implements Stringable
             throw new \LogicException("Invalid schema $schema");
         }
         $constructor->addPromotedParameter("schema")->setType($schema)->setProtected();
+        $constructor->addBody("parent::__construct();");
+
+        // Add getSchema method public abstract function getSchema(): PhlumTable;
+        $getSchema = $trait->addMethod("getSchema")->setPublic()->setFinal()->setReturnType(PhlumTable::class);
+        $getSchema->addBody('return $this->schema;');
+
+        // Add getId method
+        $getId = $trait->addMethod("getId")->setPublic()->setFinal()->setReturnType(UuidInterface::class);
+        $getId->addBody('return $this->schema->getId();');
         // Add create method
         $create = $trait->addMethod("create")->setPublic()->setStatic()->setReturnType("static");
-        $create->addParameter("driver")->setType(PhlumDriver::class);
-        $create->addBody("return \\$schema::create(\$driver, [");
-        // Add get method
-        $get = $trait->addMethod("get")->setPublic()->setStatic()->setReturnType("static");
-        $get->addParameter("driver")->setType(PhlumDriver::class);
-        $get->addParameter("id")->setType("int");
-        $get->addBody(
-            "return \\$schema::get(\$driver, \$id)->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));"
-        );
-        // Add getId method
-        $getId = $trait->addMethod("getId")->setPublic()->setReturnType("int");
-        $getId->addBody("return \$this->schema->getId();");
+        $create->addParameter("db")->setType(PhlumDatabase::class);
+        $create->addBody("return \\$schema::create(\$db, [");
         // Add getAll method
-        $getAll = $trait->addMethod("getAll")->setPublic()->setStatic()->setReturnType("array");
-        $getAll->addParameter("driver")->setType(PhlumDriver::class);
+        $getAll = $trait->addMethod("getAll")->setPublic()->setStatic()->setReturnType("iterable");
+        $getAll->addParameter("db")->setType(PhlumDatabase::class);
         $getAll->addBody(
-            "return array_map(fn(\\$schema \$val): static => \$val->getPhlumObject(fn(\\$schema \$schema)" .
-            " => new self(\$schema)), \\$schema::getMany(\$driver, array_filter(["
+            "        foreach(\\$schema::getAll(\$db) as \$element) " .
+            "yield \$element->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));"
         );
-        $getAll->addParameter("condition")->setType('array')->setDefaultValue([]);
-//        $arrayShape = [];
-        // Add updateAll method
-        $updateAll = $trait->addMethod("updateAll")->setPublic()->setStatic()->setReturnType("void");
-        $updateAll->addParameter("driver")->setType(PhlumDriver::class);
-        $updateAll->addParameter("condition")->setType('array')->setDefaultValue([]);
-        $updateAll->addParameter("data")->setType('array')->setDefaultValue([]);
-        $updateAll->addBody('$_condition = [];');
-        $updateAll->addBody('$_data = [];');
+        // Add __serialize and __unserialize methods
+        $serialize = $trait->addMethod("__serialize")->setPublic()->setReturnType("array");
+        $serialize->addBody("return \$this->schema->__serialize();");
+        $unserialize = $trait->addMethod("__unserialize")->setPublic()->setReturnType("void");
+        $unserialize->addParameter("data")->setType("array");
+        $unserialize->addBody("\$this->schema->__unserialize(\$data);");
+        $unserialize->addBody("\$this->register();");
         // Add getters and setters for properties
-        foreach ($schema::getProperties() as $i => $property) {
+        foreach ($schema::getProperties(false) as $property) {
             $propertyName = $property->getName();
             $upperPropertyName = ucfirst($propertyName);
             $propertyType = self::getTypeName($property->getType());
@@ -97,21 +95,8 @@ class HelperGenerator implements Stringable
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
             $create->addParameter($propertyName)->setType($propertyType);
             $create->addBody("    " . var_export($propertyName, true) . " => \$$propertyName,");
-//            $arrayShape[$propertyName] = Condition::class;
-            $getAll->addBody("    '$propertyName' => \$condition['$propertyName'] ?? null,");
-            $updateAll->addBody(
-                "if(array_key_exists('$propertyName', \$condition)) " .
-                "\$_condition['$i'] = \$condition['$propertyName'];"
-            );
-            $updateAll->addBody(
-                "if(array_key_exists('$propertyName', \$data)) " .
-                "\$_data['$i'] = \$data['$propertyName'];"
-            );
         }
-//        $getAllParam->addAttribute(ArrayShape::class, [$arrayShape]);
-        $getAll->addBody("])));");
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
-        $updateAll->addBody("\\$schema::updateMany(\$driver, \$_condition, \$_data);");
         return $file;
     }
 

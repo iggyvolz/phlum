@@ -7,9 +7,9 @@ before_install:
   - sudo apt-get install -y libffi-dev
   - cp ffi.so `php-config --extension-dir`
 install:
-  - php -dextension=ffi `which composer` install
+  - php -dextension=ffi.so `which composer` install
 script:
   - vendor/bin/phan
   - vendor/bin/psalm
   - vendor/bin/phpcs
-  - php -dextension=ffi genhelpers.php test/ && XDEBUG_MODE=coverage php -dextension=ffi vendor/bin/phpunit
+  - php -dextension=ffi.so genhelpers.php test/ && XDEBUG_MODE=coverage php -dextension=ffi.so vendor/bin/phpunit

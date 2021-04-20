@@ -6,9 +6,9 @@ before_install:
   - pecl install ast
   - sudo apt-get install -y libffi-dev
 install:
-  - php -dextension=./ffi.so `which composer` install
+  - php -dextension=`pwd`/ffi.so `which composer` install
 script:
   - vendor/bin/phan
   - vendor/bin/psalm
   - vendor/bin/phpcs
-  - php -dextension=./ffi.so genhelpers.php test/ && XDEBUG_MODE=coverage php -dextension=./ffi.so vendor/bin/phpunit
+  - php -dextension=`pwd`/ffi.so genhelpers.php test/ && XDEBUG_MODE=coverage php -dextension=`pwd`/ffi.so vendor/bin/phpunit

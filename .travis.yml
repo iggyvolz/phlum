@@ -6,15 +6,12 @@ before_install:
   - pecl install ast
   - sudo apt-get install -y libffi-dev
 # Hacky as hell: build FFI manually
-  - mkdir ffi
-  - cd ffi
-  - wget https://raw.githubusercontent.com/php/php-src/php-8.0.0/ext/ffi/{CREDITS,config.m4,config.w32,ffi.c,ffi.g,ffi.stub.php,ffi_arginfo.h,ffi_parser.c,php_ffi.h}
-  - phpize && ./configure && make && make install
-  - cd ..
+  - mkdir ffi && cd ffi && wget https://raw.githubusercontent.com/php/php-src/php-8.0.0/ext/ffi/{CREDITS,config.m4,config.w32,ffi.c,ffi.g,ffi.stub.php,ffi_arginfo.h,ffi_parser.c,php_ffi.h} && phpize && ./configure && make && make install && cd ..
+  - phpenv config-add travis.ini
 install:
-  - php -dextension=ffi.so `which composer` install
+  - composer install
 script:
   - vendor/bin/phan
   - vendor/bin/psalm
   - vendor/bin/phpcs
-  - php -dextension=ffi.so genhelpers.php test/ && XDEBUG_MODE=coverage php -dextension=ffi.so vendor/bin/phpunit
+  - php genhelpers.php test/ && XDEBUG_MODE=coverage vendor/bin/phpunit

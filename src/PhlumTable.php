@@ -73,7 +73,7 @@ abstract class PhlumTable
          * @var array<string, array<int, WeakReference<self>>> $objects
          */
         $objects = $sobjects->offsetGet($driver);
-        $result = $objects[static::class][$id]->get() ?? null;
+        $result = ($objects[static::class][$id] ?? null)?->get() ?? null;
         if (!$result instanceof static) {
             return null;
         }

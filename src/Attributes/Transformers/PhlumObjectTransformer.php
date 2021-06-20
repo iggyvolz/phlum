@@ -5,8 +5,9 @@ namespace iggyvolz\phlum\Attributes\Transformers;
 use iggyvolz\phlum\Attributes\Transformer;
 use iggyvolz\phlum\PhlumDriver;
 use iggyvolz\phlum\PhlumObject;
+use ReflectionType;
 
-class PhlumObjectTransformer implements Transformer
+final class PhlumObjectTransformer implements Transformer
 {
     /**
      * PhlumObjectTransformer constructor.
@@ -37,5 +38,16 @@ class PhlumObjectTransformer implements Transformer
             throw new \TypeError("Invalid type " . get_debug_type($val) . " for " . self::class);
         }
         return $this->class::get($driver, $val);
+    }
+    public static function test(?ReflectionType $property): ?static
+    {
+        if (!$property instanceof \ReflectionNamedType) {
+            return null;
+        }
+        $type = $property->getName();
+        if (is_subclass_of($type, PhlumObject::class)) {
+            return new static($type);
+        }
+        return null;
     }
 }

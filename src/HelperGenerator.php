@@ -42,9 +42,6 @@ class HelperGenerator implements Stringable
         if (empty($attrs)) {
             throw new \LogicException("No TableReference specified on " . $this->class);
         }
-        /**
-         * @var TableReference $tableRef
-         */
         $tableRef = $attrs[0]->newInstance();
         $schema = $tableRef->table;
         if (!is_subclass_of($schema, PhlumTable::class)) {

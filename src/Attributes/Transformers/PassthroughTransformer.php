@@ -4,8 +4,9 @@ namespace iggyvolz\phlum\Attributes\Transformers;
 
 use iggyvolz\phlum\Attributes\Transformer;
 use iggyvolz\phlum\PhlumDriver;
+use ReflectionType;
 
-class PassthroughTransformer implements Transformer
+final class PassthroughTransformer implements Transformer
 {
 
     public function from(PhlumDriver $driver, mixed $val): int|string|float|null
@@ -19,5 +20,17 @@ class PassthroughTransformer implements Transformer
     public function to(PhlumDriver $driver, float|int|string|null $val): mixed
     {
         return $val;
+    }
+
+    public static function test(?ReflectionType $property): ?static
+    {
+        if (!$property instanceof \ReflectionNamedType) {
+            return null;
+        }
+        $type = $property->getName();
+        if ($type === "int" || $type === "float" || $type === "string") {
+            return new static();
+        }
+        return null;
     }
 }

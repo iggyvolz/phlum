@@ -38,9 +38,6 @@ class Access
         if (empty($attributes)) {
             return self::getDefault($property);
         } else {
-            /**
-             * @var self $instance
-             */
             $instance = $attributes[0]->newInstance();
             return $instance;
         }

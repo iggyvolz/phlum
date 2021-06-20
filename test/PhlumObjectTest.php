@@ -7,6 +7,8 @@ namespace iggyvolz\phlum\test;
 use iggyvolz\phlum\Conditions\EqualTo;
 use iggyvolz\phlum\MemoryDriver;
 use iggyvolz\phlum\PhlumDriver;
+use iggyvolz\phlum\Attributes\Transformers\PassthroughTransformer;
+use iggyvolz\phlum\Attributes\Transformers\PhlumObjectTransformer;
 use PHPUnit\Framework\TestCase;
 
 class PhlumObjectTest extends TestCase
@@ -15,6 +17,8 @@ class PhlumObjectTest extends TestCase
     public function setUp(): void
     {
         $this->driver = new MemoryDriver();
+        $this->driver->registerDefaultTransformer(PassthroughTransformer::class);
+        $this->driver->registerDefaultTransformer(PhlumObjectTransformer::class);
     }
     public function testCreateAndRead(): void
     {

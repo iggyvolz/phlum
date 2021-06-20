@@ -2,7 +2,7 @@
 
 namespace iggyvolz\phlum;
 
-class MemoryDriver implements PhlumDriver
+class MemoryDriver extends PhlumDriver
 {
     /**
      * @var array<string,list<array<string,int|string|float|null>|null>>

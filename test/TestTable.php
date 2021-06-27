@@ -14,7 +14,7 @@ class TestTable extends PhlumTable
 {
     public ?int $a;
     #[SearchIndex]
-    public int $b;
+    public int $b = 1234;
     #[UniqueSearchIndex]
     public int $u;
 }

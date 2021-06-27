@@ -90,7 +90,10 @@ class HelperGenerator implements Stringable
             } else {
                 $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
             }
-            $create->addParameter($propertyName)->setType($propertyType);
+            $parameter = $create->addParameter($propertyName)->setType($propertyType);
+            if($property->hasDefaultValue()) {
+                $parameter->setDefaultValue($property->getDefaultValue());
+            }
             if (AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
                 $create->addBody("    " . var_export($propertyName, true) . " => \${$propertyName}->getId(),");
             } else {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c0c40dad5f0e8d668e24e818a76d3b9f",
+    "content-hash": "2974c976811bd5b6b25c5e3c820483e7",
     "packages": [
         {
             "name": "iggyvolz/classgen",
@@ -52,36 +52,81 @@
             "time": "2020-12-30T20:44:03+00:00"
         },
         {
-            "name": "nette/php-generator",
-            "version": "v3.5.3",
+            "name": "iggyvolz/simple-attribute-reflection",
+            "version": "dev-main",
             "source": {
                 "type": "git",
-                "url": "https://github.com/nette/php-generator.git",
-                "reference": "119f01a7bd590469cb01b538f20a125a28853626"
+                "url": "https://github.com/iggyvolz/SimpleAttributeReflection.git",
+                "reference": "50ff06019a7c4a70f249f073eee4ffd8e2cdd173"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/php-generator/zipball/119f01a7bd590469cb01b538f20a125a28853626",
-                "reference": "119f01a7bd590469cb01b538f20a125a28853626",
+                "url": "https://api.github.com/repos/iggyvolz/SimpleAttributeReflection/zipball/50ff06019a7c4a70f249f073eee4ffd8e2cdd173",
+                "reference": "50ff06019a7c4a70f249f073eee4ffd8e2cdd173",
                 "shasum": ""
             },
             "require": {
-                "nette/utils": "^3.1.2",
-                "php": ">=7.1"
+                "php": "^8.0"
             },
             "require-dev": {
-                "nette/tester": "^2.0",
-                "nikic/php-parser": "^4.4",
+                "vimeo/psalm": "^4.8"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Iggyvolz\\SimpleAttributeReflection\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "0BSD"
+            ],
+            "authors": [
+                {
+                    "name": "Katie Volz",
+                    "email": "iggyvolz@gmail.com"
+                }
+            ],
+            "description": "Simpler reflection for attributes",
+            "support": {
+                "issues": "https://github.com/iggyvolz/SimpleAttributeReflection/issues",
+                "source": "https://github.com/iggyvolz/SimpleAttributeReflection/tree/main"
+            },
+            "time": "2021-06-27T16:48:43+00:00"
+        },
+        {
+            "name": "nette/php-generator",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nette/php-generator.git",
+                "reference": "7c91b22d7d8d54ceea5f7c30300563d40ff6c2a4"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nette/php-generator/zipball/7c91b22d7d8d54ceea5f7c30300563d40ff6c2a4",
+                "reference": "7c91b22d7d8d54ceea5f7c30300563d40ff6c2a4",
+                "shasum": ""
+            },
+            "require": {
+                "nette/utils": "^3.1.2 || ^4.0",
+                "php": ">=8.0 <8.1"
+            },
+            "require-dev": {
+                "nette/tester": "^2.4",
+                "nikic/php-parser": "^4.10",
                 "phpstan/phpstan": "^0.12",
-                "tracy/tracy": "^2.3"
+                "tracy/tracy": "^2.8"
             },
             "suggest": {
                 "nikic/php-parser": "to use ClassType::withBodiesFrom() & GlobalFunction::withBodyFrom()"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.5-dev"
+                    "dev-master": "4.0-dev"
                 }
             },
             "autoload": {
@@ -105,7 +150,7 @@
                     "homepage": "https://nette.org/contributors"
                 }
             ],
-            "description": "🐘 Nette PHP Generator: generates neat PHP code for you. Supports new PHP 7.4 features.",
+            "description": "🐘 Nette PHP Generator: generates neat PHP code for you. Supports new PHP 8.0 features.",
             "homepage": "https://nette.org",
             "keywords": [
                 "code",
@@ -115,34 +160,34 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/php-generator/issues",
-                "source": "https://github.com/nette/php-generator/tree/v3.5.3"
+                "source": "https://github.com/nette/php-generator/tree/master"
             },
-            "time": "2021-02-24T18:40:21+00:00"
+            "time": "2021-04-22T16:28:13+00:00"
         },
         {
             "name": "nette/utils",
-            "version": "v3.2.2",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nette/utils.git",
-                "reference": "967cfc4f9a1acd5f1058d76715a424c53343c20c"
+                "reference": "f06376c65d5ba63a8ab9e769f55f2bcbe722d42e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nette/utils/zipball/967cfc4f9a1acd5f1058d76715a424c53343c20c",
-                "reference": "967cfc4f9a1acd5f1058d76715a424c53343c20c",
+                "url": "https://api.github.com/repos/nette/utils/zipball/f06376c65d5ba63a8ab9e769f55f2bcbe722d42e",
+                "reference": "f06376c65d5ba63a8ab9e769f55f2bcbe722d42e",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.2 <8.1"
+                "php": ">=8.0 <8.1"
             },
             "conflict": {
                 "nette/di": "<3.0.6"
             },
             "require-dev": {
-                "nette/tester": "~2.0",
+                "nette/tester": "^2.4",
                 "phpstan/phpstan": "^0.12",
-                "tracy/tracy": "^2.3"
+                "tracy/tracy": "^2.8"
             },
             "suggest": {
                 "ext-gd": "to use Image",
@@ -153,10 +198,11 @@
                 "ext-tokenizer": "to use Nette\\Utils\\Reflection::getUseStatements()",
                 "ext-xml": "to use Strings::length() etc. when mbstring is not available"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "3.2-dev"
+                    "dev-master": "4.0-dev"
                 }
             },
             "autoload": {
@@ -200,9 +246,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/utils/issues",
-                "source": "https://github.com/nette/utils/tree/v3.2.2"
+                "source": "https://github.com/nette/utils/tree/master"
             },
-            "time": "2021-03-03T22:53:25+00:00"
+            "time": "2021-04-22T16:23:30+00:00"
         }
     ],
     "packages-dev": [
@@ -798,6 +844,48 @@
             "time": "2021-02-22T14:02:09+00:00"
         },
         {
+            "name": "jetbrains/phpstorm-attributes",
+            "version": "1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/JetBrains/phpstorm-attributes.git",
+                "reference": "a7a83ae5df4dd3c0875484483de19de8edf60a9f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/JetBrains/phpstorm-attributes/zipball/a7a83ae5df4dd3c0875484483de19de8edf60a9f",
+                "reference": "a7a83ae5df4dd3c0875484483de19de8edf60a9f",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "JetBrains\\PhpStorm\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "JetBrains",
+                    "homepage": "https://www.jetbrains.com"
+                }
+            ],
+            "description": "PhpStorm specific attributes",
+            "keywords": [
+                "attributes",
+                "jetbrains",
+                "phpstorm"
+            ],
+            "support": {
+                "issues": "https://youtrack.jetbrains.com/newIssue?project=WI",
+                "source": "https://github.com/JetBrains/phpstorm-attributes/tree/1.0"
+            },
+            "time": "2020-11-17T11:09:47+00:00"
+        },
+        {
             "name": "microsoft/tolerant-php-parser",
             "version": "v0.0.23",
             "source": {
@@ -902,16 +990,16 @@
         },
         {
             "name": "netresearch/jsonmapper",
-            "version": "v3.1.1",
+            "version": "v4.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cweiske/jsonmapper.git",
-                "reference": "ba09f0e456d4f00cef84e012da5715625594407c"
+                "reference": "8bbc021a8edb2e4a7ea2f8ad4fa9ec9dce2fcb8d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cweiske/jsonmapper/zipball/ba09f0e456d4f00cef84e012da5715625594407c",
-                "reference": "ba09f0e456d4f00cef84e012da5715625594407c",
+                "url": "https://api.github.com/repos/cweiske/jsonmapper/zipball/8bbc021a8edb2e4a7ea2f8ad4fa9ec9dce2fcb8d",
+                "reference": "8bbc021a8edb2e4a7ea2f8ad4fa9ec9dce2fcb8d",
                 "shasum": ""
             },
             "require": {
@@ -919,10 +1007,10 @@
                 "ext-pcre": "*",
                 "ext-reflection": "*",
                 "ext-spl": "*",
-                "php": ">=5.6"
+                "php": ">=7.1"
             },
             "require-dev": {
-                "phpunit/phpunit": "~4.8.35 || ~5.7 || ~6.4 || ~7.0",
+                "phpunit/phpunit": "~7.5 || ~8.0 || ~9.0",
                 "squizlabs/php_codesniffer": "~3.5"
             },
             "type": "library",
@@ -947,9 +1035,9 @@
             "support": {
                 "email": "cweiske@cweiske.de",
                 "issues": "https://github.com/cweiske/jsonmapper/issues",
-                "source": "https://github.com/cweiske/jsonmapper/tree/v3.1.1"
+                "source": "https://github.com/cweiske/jsonmapper/tree/v4.0.0"
             },
-            "time": "2020-11-02T19:19:54+00:00"
+            "time": "2020-12-01T19:48:11+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -1062,16 +1150,16 @@
         },
         {
             "name": "phan/phan",
-            "version": "4.0.6",
+            "version": "4.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phan/phan.git",
-                "reference": "4caaa97195dcea549021cb773a5dc30bb46d1fab"
+                "reference": "2c9bb22823dd1dcaee62adefa2826db8a9e79302"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phan/phan/zipball/4caaa97195dcea549021cb773a5dc30bb46d1fab",
-                "reference": "4caaa97195dcea549021cb773a5dc30bb46d1fab",
+                "url": "https://api.github.com/repos/phan/phan/zipball/2c9bb22823dd1dcaee62adefa2826db8a9e79302",
+                "reference": "2c9bb22823dd1dcaee62adefa2826db8a9e79302",
                 "shasum": ""
             },
             "require": {
@@ -1082,7 +1170,7 @@
                 "ext-tokenizer": "*",
                 "felixfbecker/advanced-json-rpc": "^3.0.4",
                 "microsoft/tolerant-php-parser": "0.0.23",
-                "netresearch/jsonmapper": "^1.6.0|^2.0|^3.0",
+                "netresearch/jsonmapper": "^1.6.0|^2.0|^3.0|^4.0",
                 "php": "^7.2.0|^8.0.0",
                 "sabre/event": "^5.0.3",
                 "symfony/console": "^3.2|^4.0|^5.0",
@@ -1133,9 +1221,9 @@
             ],
             "support": {
                 "issues": "https://github.com/phan/phan/issues",
-                "source": "https://github.com/phan/phan/tree/4.0.6"
+                "source": "https://github.com/phan/phan/tree/4.0.7"
             },
-            "time": "2021-05-19T23:27:16+00:00"
+            "time": "2021-06-26T23:07:14+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -1857,16 +1945,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.5.5",
+            "version": "9.5.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "89ff45ea9d70e35522fb6654a2ebc221158de276"
+                "reference": "fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/89ff45ea9d70e35522fb6654a2ebc221158de276",
-                "reference": "89ff45ea9d70e35522fb6654a2ebc221158de276",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb",
+                "reference": "fb9b8333f14e3dce976a60ef6a7e05c7c7ed8bfb",
                 "shasum": ""
             },
             "require": {
@@ -1896,7 +1984,7 @@
                 "sebastian/global-state": "^5.0.1",
                 "sebastian/object-enumerator": "^4.0.3",
                 "sebastian/resource-operations": "^3.0.3",
-                "sebastian/type": "^2.3.2",
+                "sebastian/type": "^2.3.4",
                 "sebastian/version": "^3.0.2"
             },
             "require-dev": {
@@ -1944,7 +2032,7 @@
             ],
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.5"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.5.6"
             },
             "funding": [
                 {
@@ -1956,7 +2044,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2021-06-05T04:49:07+00:00"
+            "time": "2021-06-23T05:14:38+00:00"
         },
         {
             "name": "psr/container",
@@ -2975,7 +3063,6 @@
                     "type": "github"
                 }
             ],
-            "abandoned": true,
             "time": "2020-09-28T06:45:17+00:00"
         },
         {
@@ -4008,16 +4095,16 @@
         },
         {
             "name": "vimeo/psalm",
-            "version": "4.7.3",
+            "version": "4.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vimeo/psalm.git",
-                "reference": "38c452ae584467e939d55377aaf83b5a26f19dd1"
+                "reference": "f73f2299dbc59a3e6c4d66cff4605176e728ee69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vimeo/psalm/zipball/38c452ae584467e939d55377aaf83b5a26f19dd1",
-                "reference": "38c452ae584467e939d55377aaf83b5a26f19dd1",
+                "url": "https://api.github.com/repos/vimeo/psalm/zipball/f73f2299dbc59a3e6c4d66cff4605176e728ee69",
+                "reference": "f73f2299dbc59a3e6c4d66cff4605176e728ee69",
                 "shasum": ""
             },
             "require": {
@@ -4055,10 +4142,10 @@
                 "phpmyadmin/sql-parser": "5.1.0||dev-master",
                 "phpspec/prophecy": ">=1.9.0",
                 "phpunit/phpunit": "^9.0",
-                "psalm/plugin-phpunit": "^0.13",
+                "psalm/plugin-phpunit": "^0.16",
                 "slevomat/coding-standard": "^7.0",
                 "squizlabs/php_codesniffer": "^3.5",
-                "symfony/process": "^4.3",
+                "symfony/process": "^4.3 || ^5.0",
                 "weirdan/phpunit-appveyor-reporter": "^1.0.0",
                 "weirdan/prophecy-shim": "^1.0 || ^2.0"
             },
@@ -4107,9 +4194,9 @@
             ],
             "support": {
                 "issues": "https://github.com/vimeo/psalm/issues",
-                "source": "https://github.com/vimeo/psalm/tree/4.7.3"
+                "source": "https://github.com/vimeo/psalm/tree/4.8.1"
             },
-            "time": "2021-05-24T04:09:51+00:00"
+            "time": "2021-06-20T23:03:20+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -4223,7 +4310,10 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "iggyvolz/classgen": 20
+        "nette/php-generator": 20,
+        "nette/utils": 20,
+        "iggyvolz/classgen": 20,
+        "iggyvolz/simple-attribute-reflection": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum;
 
+use Iggyvolz\SimpleAttributeReflection\AttributeReflection;
 use ReflectionClass;
 use ReflectionProperty;
 use WeakMap;
@@ -20,30 +21,43 @@ abstract class PhlumTable
     {
         return $this->id;
     }
+
+    public function getDriver(): PhlumDriver
+    {
+        return $this->driver;
+    }
+
     final public function __construct(private PhlumDriver $driver, private int $id)
     {
     }
     /**
      * @return array<string, ReflectionProperty>
      */
-    public static function getProperties(): array
+    public static function getProperties(bool $includeId = false): array
     {
         $refl = new ReflectionClass(static::class);
-        // Filter out $id
-        $props = array_values(
-            array_filter(
-                $refl->getProperties(),
-                fn(ReflectionProperty $rp): bool => $rp->getDeclaringClass()->getName() === static::class
-            )
-        );
+        $props = $refl->getProperties();
+        if (!$includeId) {
+            // Filter out $id
+            $props = array_values(
+                array_filter(
+                    $props,
+                    fn(ReflectionProperty $rp): bool => $rp->getDeclaringClass()->getName() === static::class
+                )
+            );
+        }
         return array_combine(
             array_map(fn(ReflectionProperty $rp): string => $rp->getName(), $props),
             $props
         );
     }
-    private static function getTableName(): string
+    public static function getTableName(): string
     {
-        return hash("sha256", static::class);
+        return AttributeReflection::getAttribute(
+            new ReflectionClass(static::class),
+            TableName::class
+        )?->TableName
+            ?? hash("sha256", static::class);
     }
 
     /**
@@ -102,25 +116,17 @@ abstract class PhlumTable
      * @param array<string, mixed> $props
      * @return static
      * @phan-suppress PhanTypeInstantiateAbstractStatic
+     *   => Checked internally
      */
     public static function create(PhlumDriver $driver, array $props): static
     {
         if (static::isAbstract()) {
             throw new \LogicException("Cannot call PhlumTable::get on abstract class");
         }
-        /**
-         * @psalm-var mixed $value
-         */
-        foreach ($props as $key => &$value) {
-            $value = $driver->getTransformer(static::getProperties()[$key])->from($driver, $value);
-        }
-        /**
-         * @var array<string, float|int|null|string> $props
-         */
         $self = new static($driver, $driver->create(static::getTableName(), $props));
         foreach (static::getProperties() as $i => $property) {
             $property->setAccessible(true);
-            $property->setValue($self, $driver->getTransformer($property)->to($driver, $props[$i]));
+            $property->setValue($self, $props[$i]);
         }
         static::setObject($driver, $self);
         return $self;
@@ -141,83 +147,24 @@ abstract class PhlumTable
         if (is_null($self)) {
             $self = new static($driver, $id);
             $props = $driver->read(static::getTableName(), $id);
+            if (is_null($props)) {
+                return null;
+            }
             foreach (static::getProperties() as $i => $property) {
                 $property->setAccessible(true);
-                $property->setValue($self, $driver->getTransformer($property)->to($driver, $props[$i]));
+                $property->setValue($self, $props[$i]);
             }
         }
         return $self;
-    }
-
-    /**
-     * @param PhlumDriver $driver
-     * @param array<string, Condition> $condition
-     * @return array<static>
-     */
-    public static function getMany(PhlumDriver $driver, array $condition): array
-    {
-        $ret = [];
-        foreach ($driver->readMany(static::getTableName(), $condition) as $id) {
-            $ret[] = static::get($driver, $id) ??
-                throw new \RuntimeException("Database returned invalid object");
-        }
-        return $ret;
-    }
-
-    /**
-     * @param PhlumDriver $driver
-     * @param array<string, Condition> $condition
-     * @param array<string,mixed> $data
-     * @return void
-     */
-    public static function updateMany(PhlumDriver $driver, array $condition, array $data): void
-    {
-        $props = [];
-        foreach (static::getProperties() as $i => $property) {
-            if (array_key_exists($i, $data)) {
-                $props[$i] = $driver->getTransformer($property)->from($driver, $data[$i]);
-            }
-        }
-        $driver->updateMany(static::getTableName(), $condition, $props);
-        // Need to update local copies of objects
-
-        /**
-         * /var WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
-         */
-        //private static ?WeakMap $objects = null;
-        $sobjects = self::$objects;
-        if (is_null($sobjects)) {
-            return;
-        }
-        if (!$sobjects->offsetExists($driver)) {
-            return;
-        }
-        /**
-         * @var array<string, array<int, WeakReference<self>>> $objects
-         */
-        $objects = $sobjects->offsetGet($driver);
-        foreach ($objects[static::class] as $id => $obj) {
-            $self = $obj->get();
-            if (is_null($self)) {
-                continue; // This object does not exist, skip it
-            }
-            $props = $driver->read(static::getTableName(), $id);
-            foreach (static::getProperties() as $i => $property) {
-                if (array_key_exists($i, $props)) {
-                    $property->setAccessible(true);
-                    $property->setValue($self, $driver->getTransformer($property)->to($driver, $props[$i]));
-                }
-            }
-        }
     }
     public function write(): void
     {
         $props = [];
         foreach (static::getProperties() as $property) {
-            $props[$property->getName()] = $this->driver->getTransformer($property)->from(
-                $this->driver,
-                $property->getValue($this)
-            );
+            /**
+             * @var mixed
+             */
+            $props[$property->getName()] = $property->getValue($this);
         }
         $this->driver->update(static::getTableName(), $this->id, $props);
     }

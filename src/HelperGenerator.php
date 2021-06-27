@@ -10,6 +10,7 @@ use iggyvolz\phlum\Indeces\Index;
 use iggyvolz\phlum\Indeces\UniqueSearchIndex;
 use iggyvolz\phlum\Indeces\SearchIndex;
 use Iggyvolz\SimpleAttributeReflection\AttributeReflection;
+use Nette\PhpGenerator\Parameter;
 use ReflectionClass;
 use ReflectionAttribute;
 use Nette\PhpGenerator\PhpFile;
@@ -91,7 +92,7 @@ class HelperGenerator implements Stringable
                 $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
             }
             $parameter = $create->addParameter($propertyName)->setType($propertyType);
-            if($property->hasDefaultValue()) {
+            if ($property->hasDefaultValue()) {
                 $parameter->setDefaultValue($property->getDefaultValue());
             }
             if (AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
@@ -100,6 +101,14 @@ class HelperGenerator implements Stringable
                 $create->addBody("    " . var_export($propertyName, true) . " => \$$propertyName,");
             }
         }
+        // Sort parameters by required first then optional
+        $parameters = $create->getParameters();
+        usort(
+            $parameters,
+            fn(Parameter $p1, Parameter $p2): int =>
+                ($p1->hasDefaultValue() ? 1 : 0) <=> ($p2->hasDefaultValue() ? 1 : 0)
+        );
+        $create->setParameters($parameters);
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
 
         // Add indeces

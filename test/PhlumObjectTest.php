@@ -17,7 +17,8 @@ class PhlumObjectTest extends TestCase
     }
     public function testCreateAndRead(): void
     {
-        $x = TestObject::create(driver: $this->driver, a: $a = null, b: $b = 5678, u: 1);
+        $b = 1234; // default value
+        $x = TestObject::create(driver: $this->driver, a: $a = null, u: 1);
         $xId = $x->getId();
         $y = TestObject::get($this->driver, $xId);
         $this->assertSame($x, $y);

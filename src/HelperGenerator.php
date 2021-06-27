@@ -40,7 +40,11 @@ class HelperGenerator implements Stringable
         $trait = $namespace->addClass($classname)->setTrait();
         // Add protected constructor
         $constructor = $trait->addMethod("__construct")->setPrivate();
-        $tableRef = AttributeReflection::getAttribute(new ReflectionClass($this->class), TableReference::class) ?? throw new \LogicException("No TableReference specified on " . $this->class);
+        $tableRef = AttributeReflection::getAttribute(
+            new ReflectionClass($this->class),
+            TableReference::class
+        )
+            ?? throw new \LogicException("No TableReference specified on " . $this->class);
         $schema = $tableRef->table;
         if (!is_subclass_of($schema, PhlumTable::class)) {
             throw new \LogicException("Invalid schema $schema");
@@ -65,28 +69,29 @@ class HelperGenerator implements Stringable
             $propertyName = $property->getName();
             $upperPropertyName = ucfirst($propertyName);
             $propertyType = self::getTypeName($property->getType());
-            if($attr = AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
+            if ($attr = AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
                 $propertyType = $attr->class;
             }
             $access = Access::get($property);
             $getter = $trait->addMethod("get$upperPropertyName");
             $setter = $trait->addMethod("set$upperPropertyName")->setReturnType("void");
             $getter->setReturnType($propertyType);
-            if(AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
-                $getter->setBody("return \\$propertyType::get(\$this->schema->getDriver(), \$this->schema->$propertyName);");
+            if (AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
+                $getter->setBody("return \\$propertyType::get(\$this->schema->getDriver(),"
+                    . " \$this->schema->$propertyName);");
             } else {
                 $getter->setBody("return \$this->schema->$propertyName;");
             }
             $access->applyGetter($getter);
             $setter->addParameter("val")->setType($propertyType);
             $access->applySetter($setter);
-            if(AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
+            if (AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
                 $setter->setBody("\$this->schema->$propertyName = \$val->getId();\n\$this->schema->write();");
             } else {
                 $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
             }
             $create->addParameter($propertyName)->setType($propertyType);
-            if(AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
+            if (AttributeReflection::getAttribute($property, PhlumObjectReference::class)) {
                 $create->addBody("    " . var_export($propertyName, true) . " => \${$propertyName}->getId(),");
             } else {
                 $create->addBody("    " . var_export($propertyName, true) . " => \$$propertyName,");
@@ -95,8 +100,8 @@ class HelperGenerator implements Stringable
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
 
         // Add indeces
-        foreach([new ReflectionClass($schema), ...(new ReflectionClass($schema))->getProperties()] as $target) {
-            foreach($target->getAttributes(Index::class, ReflectionAttribute::IS_INSTANCEOF) as $attr) {
+        foreach ([new ReflectionClass($schema), ...(new ReflectionClass($schema))->getProperties()] as $target) {
+            foreach ($target->getAttributes(Index::class, ReflectionAttribute::IS_INSTANCEOF) as $attr) {
                 $index = $attr->newInstance();
                 $methodName = $index->getMethodName($target);
                 $idMethodName = ($index instanceof UniqueSearchIndex) ? "{$methodName}Id" : "{$methodName}Ids";
@@ -106,36 +111,48 @@ class HelperGenerator implements Stringable
                     case $index instanceof InclusionIndex:
                         $method->setReturnType("array")->setStatic();
                         $method->addParameter("driver")->setType(PhlumDriver::class);
-                        $method->setBody("return array_map(fn(int \$id): self => self::get(\$driver, \$id), self::$idMethodName(\$driver));");
+                        $method->setBody(
+                            "return array_map(fn(int \$id): self => self::get(\$driver, \$id)," .
+                            " self::$idMethodName(\$driver));"
+                        );
                         $idMethod->setReturnType("array")->setStatic();
                         $idMethod->addParameter("driver")->setType(PhlumDriver::class);
-                        $idMethod->setBody("return (new \\" . $attr->getName() . "(" . implode(",",
-                                array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
-                            ) . "))->get(new \ReflectionClass(\\$schema::class), \$driver);");
+                        $idMethod->setBody("return (new \\" . $attr->getName() . "(" . implode(
+                            ",",
+                            array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
+                        ) . "))->get(new \ReflectionClass(\\$schema::class), \$driver);");
                         break;
                     case $index instanceof SearchIndex:
                         $method->setReturnType("array")->setStatic();
                         $method->addParameter("driver")->setType(PhlumDriver::class);
                         $method->addParameter("input")->setType($index->getType($target));
-                        $method->setBody("return array_map(fn(int \$id): self => self::get(\$driver, \$id), self::$idMethodName(\$driver, \$input));");
+                        $method->setBody("return array_map(fn(int \$id): self => self::get(\$driver, \$id)," .
+                            " self::$idMethodName(\$driver, \$input));");
                         $idMethod->setReturnType("array")->setStatic();
                         $idMethod->addParameter("driver")->setType(PhlumDriver::class);
                         $idMethod->addParameter("input")->setType($index->getType($target));
-                        $idMethod->setBody("return (new \\" . $attr->getName() . "(" . implode(",",
-                                array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
-                            ) . "))->get(new \ReflectionProperty(\\$schema::class, ". var_export($target->getName(), true) ."), \$driver, \$input);");
+                        $idMethod->setBody("return (new \\" . $attr->getName() . "(" . implode(
+                            ",",
+                            array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
+                        ) . "))->get(new \ReflectionProperty(\\$schema::class, "
+                            . var_export($target->getName(), true) . "), \$driver, \$input);");
                         break;
                     case $index instanceof UniqueSearchIndex:
                         $method->setReturnType("self|null")->setStatic();
                         $method->addParameter("driver")->setType(PhlumDriver::class);
                         $method->addParameter("input")->setType($index->getType($target));
-                        $method->setBody("\$obj = self::$idMethodName(\$driver, \$input); if(is_null(\$obj)) return null; return self::get(\$driver, \$obj);");
+                        $method->setBody(
+                            "\$obj = self::$idMethodName(\$driver, \$input);"
+                            . " if(is_null(\$obj)) return null; return self::get(\$driver, \$obj);"
+                        );
                         $idMethod->setReturnType("null|int")->setStatic();
                         $idMethod->addParameter("driver")->setType(PhlumDriver::class);
                         $idMethod->addParameter("input")->setType($index->getType($target));
-                        $idMethod->setBody("return (new \\" . $attr->getName() . "(" . implode(",",
-                                array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
-                            ) . "))->get(new \ReflectionProperty(\\$schema::class, ". var_export($target->getName(), true) ."), \$driver, \$input);");
+                        $idMethod->setBody("return (new \\" . $attr->getName() . "(" . implode(
+                            ",",
+                            array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
+                        ) . "))->get(new \ReflectionProperty(\\$schema::class, "
+                            . var_export($target->getName(), true) . "), \$driver, \$input);");
                         break;
                     default:
                         throw new \TypeError("Unknown index type " . get_debug_type($index));

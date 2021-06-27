@@ -1,6 +1,5 @@
 <?php
 
-
 namespace iggyvolz\phlum\Indeces;
 
 use iggyvolz\phlum\PhlumDriver;

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace iggyvolz\phlum\MemoryDriver;
 
 use Attribute;
@@ -16,36 +15,39 @@ class UniqueSearchIndex implements \iggyvolz\phlum\Indeces\UniqueSearchIndex
 
     public function get(ReflectionClass|ReflectionProperty $target, PhlumDriver $driver, mixed $input): ?int
     {
-        if(!$driver instanceof MemoryDriver) {
-            throw new TypeError(static::class . " requires the use of the " . MemoryDriver::class . " driver, " . get_debug_type($driver) . " was used");
+        if (!$driver instanceof MemoryDriver) {
+            throw new TypeError(
+                static::class . " requires the use of the " . MemoryDriver::class . " driver, "
+                . get_debug_type($driver) . " was used"
+            );
         }
-        if($target instanceof ReflectionClass) {
+        if ($target instanceof ReflectionClass) {
             throw new TypeError(static::class . " must be placed on a property, not a class");
         }
         /**
          * @var string
          */
         $tableName = $target->getDeclaringClass()->getMethod("getTableName")->invoke(null);
-        foreach($driver->getAll($tableName) as $id) {
-            if(($driver->read($tableName, $id) ?? [])[$target->getName()] === $input) {
+        foreach ($driver->getAll($tableName) as $id) {
+            if (($driver->read($tableName, $id) ?? [])[$target->getName()] === $input) {
                 return $id;
             }
         }
         return null;
     }
 
-    function getMethodName(ReflectionProperty|ReflectionClass $target): string
+    public function getMethodName(ReflectionProperty|ReflectionClass $target): string
     {
         return "search" . ucfirst($target->getName());
     }
 
     public function getType(ReflectionProperty|ReflectionClass $target): string
     {
-        if($target instanceof ReflectionClass) {
+        if ($target instanceof ReflectionClass) {
             throw new TypeError(static::class . " must be placed on a property, not a class");
         }
         $type = $target->getType();
-        if(is_null($type)) {
+        if (is_null($type)) {
             return "mixed";
         } else {
             return $this->getReflectionType($type);
@@ -54,10 +56,13 @@ class UniqueSearchIndex implements \iggyvolz\phlum\Indeces\UniqueSearchIndex
 
     private function getReflectionType(\ReflectionType $type): string
     {
-        if($type instanceof \ReflectionNamedType) {
+        if ($type instanceof \ReflectionNamedType) {
             return $type->getName();
-        } elseif($type instanceof \ReflectionUnionType) {
-            return implode("|", array_map(fn(\ReflectionType $rt): string => $this->getReflectionType($rt), $type->getTypes()));
+        } elseif ($type instanceof \ReflectionUnionType) {
+            return implode(
+                "|",
+                array_map(fn(\ReflectionType $rt): string => $this->getReflectionType($rt), $type->getTypes())
+            );
         } else {
             throw new TypeError("Unknown ReflectionType " . get_debug_type($type));
         }

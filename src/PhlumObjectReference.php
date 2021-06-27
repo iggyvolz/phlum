@@ -1,6 +1,5 @@
 <?php
 
-
 namespace iggyvolz\phlum;
 
 use JetBrains\PhpStorm\Immutable;
@@ -15,7 +14,6 @@ class PhlumObjectReference
      */
     public function __construct(
         public string $class
-    )
-    {
+    ) {
     }
 }

@@ -22,7 +22,8 @@ class MemoryDriver extends PhlumDriver
             $this->memory[$table] = [];
         }
         $this->memory[$table][] = $data;
-        return array_key_last($this->memory[$table]) ?? throw new \LogicException("Could not insert element into array");
+        return array_key_last($this->memory[$table])
+            ?? throw new \LogicException("Could not insert element into array");
     }
 
     /**

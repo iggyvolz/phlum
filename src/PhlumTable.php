@@ -37,7 +37,7 @@ abstract class PhlumTable
     {
         $refl = new ReflectionClass(static::class);
         $props = $refl->getProperties();
-        if(!$includeId) {
+        if (!$includeId) {
             // Filter out $id
             $props = array_values(
                 array_filter(
@@ -53,8 +53,11 @@ abstract class PhlumTable
     }
     public static function getTableName(): string
     {
-        return
-            AttributeReflection::getAttribute(new ReflectionClass(static::class), TableName::class)?->TableName ?? hash("sha256", static::class);
+        return AttributeReflection::getAttribute(
+            new ReflectionClass(static::class),
+            TableName::class
+        )?->TableName
+            ?? hash("sha256", static::class);
     }
 
     /**
@@ -144,7 +147,9 @@ abstract class PhlumTable
         if (is_null($self)) {
             $self = new static($driver, $id);
             $props = $driver->read(static::getTableName(), $id);
-            if(is_null($props)) return null;
+            if (is_null($props)) {
+                return null;
+            }
             foreach (static::getProperties() as $i => $property) {
                 $property->setAccessible(true);
                 $property->setValue($self, $props[$i]);

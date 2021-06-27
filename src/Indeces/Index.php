@@ -1,6 +1,5 @@
 <?php
 
-
 namespace iggyvolz\phlum\Indeces;
 
 use ReflectionClass;
@@ -14,5 +13,5 @@ interface Index
     /**
      * Name of the method that should be generated
      */
-    function getMethodName(ReflectionProperty|ReflectionClass $target): string;
+    public function getMethodName(ReflectionProperty|ReflectionClass $target): string;
 }

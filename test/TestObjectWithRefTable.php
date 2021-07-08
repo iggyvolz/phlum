@@ -9,6 +9,6 @@ use iggyvolz\phlum\PhlumTable;
 #[AllIndex]
 class TestObjectWithRefTable extends PhlumTable
 {
-    #[PhlumObjectReference(TestObject::class)]
-    public int $reference;
+    #[ReferenceTo(TestObject::class)]
+    public PhlumObjectReference $ref;
 }

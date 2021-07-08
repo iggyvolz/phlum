@@ -5,6 +5,7 @@ namespace iggyvolz\phlum\MemoryDriver;
 use Attribute;
 use iggyvolz\phlum\Indeces\InclusionIndex;
 use iggyvolz\phlum\PhlumDriver;
+use iggyvolz\phlum\PhlumObjectReference;
 use ReflectionClass;
 use ReflectionProperty;
 use TypeError;
@@ -15,7 +16,7 @@ class AllIndex implements InclusionIndex
     /**
      * @param ReflectionClass|ReflectionProperty $target
      * @param PhlumDriver $driver
-     * @return list<int>
+     * @return list<PhlumObjectReference>
      */
     public function get(ReflectionClass|ReflectionProperty $target, PhlumDriver $driver): array
     {
@@ -28,11 +29,7 @@ class AllIndex implements InclusionIndex
         if ($target instanceof ReflectionProperty) {
             throw new TypeError(static::class . " must be placed on a class, not a property");
         }
-        /**
-         * @var string
-         */
-        $tableName = $target->getMethod("getTableName")->invoke(null);
-        return $driver->getAll($tableName);
+        return $driver->getAll($target->getName());
     }
 
     public function getMethodName(ReflectionProperty|ReflectionClass $target): string

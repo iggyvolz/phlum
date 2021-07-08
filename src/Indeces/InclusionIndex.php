@@ -3,6 +3,7 @@
 namespace iggyvolz\phlum\Indeces;
 
 use iggyvolz\phlum\PhlumDriver;
+use iggyvolz\phlum\PhlumObjectReference;
 use ReflectionClass;
 use ReflectionProperty;
 
@@ -15,7 +16,7 @@ interface InclusionIndex extends Index
     /**
      * @param ReflectionClass|ReflectionProperty $target Item that the index is placed on
      * @param PhlumDriver $driver
-     * @return list<int>
+     * @return list<PhlumObjectReference>
      */
     public function get(ReflectionClass|ReflectionProperty $target, PhlumDriver $driver): array;
 }

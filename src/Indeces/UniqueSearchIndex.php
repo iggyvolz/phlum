@@ -3,6 +3,7 @@
 namespace iggyvolz\phlum\Indeces;
 
 use iggyvolz\phlum\PhlumDriver;
+use iggyvolz\phlum\PhlumObjectReference;
 use ReflectionClass;
 use ReflectionProperty;
 
@@ -16,9 +17,9 @@ interface UniqueSearchIndex extends Index
      * @param ReflectionClass|ReflectionProperty $target Item that the index is placed on
      * @param PhlumDriver $driver
      * @param mixed $input
-     * @return null|int
+     * @return null|PhlumObjectReference
      */
-    public function get(ReflectionClass|ReflectionProperty $target, PhlumDriver $driver, mixed $input): ?int;
+    public function get(ReflectionClass|ReflectionProperty $target, PhlumDriver $driver, mixed $input): ?PhlumObjectReference;
 
     public function getType(ReflectionClass|ReflectionProperty $target): string;
 }

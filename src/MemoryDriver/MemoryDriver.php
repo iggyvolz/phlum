@@ -3,71 +3,60 @@
 namespace iggyvolz\phlum\MemoryDriver;
 
 use iggyvolz\phlum\PhlumDriver;
+use iggyvolz\phlum\PhlumObjectReference;
+use iggyvolz\phlum\PhlumTable;
+use SplObjectStorage;
 
 class MemoryDriver extends PhlumDriver
 {
     /**
-     * @var array<string,array<int,array<string,mixed>|null>>
+     * @var array<string,SplObjectStorage<PhlumObjectReference,PhlumTable>>
      */
-    private array $memory = [];
-
-    /**
-     * @param string $table
-     * @param array<string,mixed> $data
-     * @return int
-     */
-    public function create(string $table, array $data): int
+    public array $memory = [];
+    public function __construct()
     {
-        if (!array_key_exists($table, $this->memory)) {
-            $this->memory[$table] = [];
+    }
+
+    public function create(PhlumTable $data): PhlumObjectReference
+    {
+        $tableName = $data::class;
+        if(!array_key_exists($tableName, $this->memory)) {
+            $this->memory[$tableName] = new SplObjectStorage();
         }
-        $this->memory[$table][] = $data;
-        return array_key_last($this->memory[$table])
-            ?? throw new \LogicException("Could not insert element into array");
+        $this->memory[$tableName]->offsetSet($ref = new DummyPhlumObjectReference($this, $data::class), $data);
+        return $ref;
     }
 
-    /**
-     * @param string $table
-     * @param int $id
-     * @return null|array<string,mixed>
-     */
-    public function read(string $table, int $id): ?array
+    public function read(PhlumObjectReference $reference): ?PhlumTable
     {
-        return $this->memory[$table][$id] ?? null;
+        if(!$reference instanceof DummyPhlumObjectReference) {
+            throw new \LogicException();
+        }
+        $tableName = $reference->class;
+        if(array_key_exists($tableName, $this->memory) && $this->memory[$tableName]->offsetExists($reference)) {
+            return $this->memory[$tableName]->offsetGet($reference);
+        }
+        return null;
+    }
+
+    public function update(PhlumTable $data): void
+    {
+        // No-op; the object will already update
+    }
+
+    public function delete(PhlumTable $data): void
+    {
+        $tableName = $data::class;
+        if(array_key_exists($tableName, $this->memory)) {
+            $this->memory[$tableName]->offsetUnset($data);
+        }
     }
 
     /**
-     * @param string $table
-     * @return list<int>
+     * @return list<PhlumObjectReference>
      */
     public function getAll(string $table): array
     {
-        return array_keys($this->memory[$table]);
-    }
-
-
-    /**
-     * @param string $table
-     * @param int $id
-     * @param array<string, mixed> $data
-     */
-    public function update(string $table, int $id, array $data): void
-    {
-        if (!array_key_exists($id, $this->memory[$table] ?? [])) {
-            throw new \RuntimeException("Cannot update record not in table");
-        }
-        $this->memory[$table][$id] = $data;
-    }
-
-    /**
-     * @param string $table
-     * @param int $id
-     */
-    public function delete(string $table, int $id): void
-    {
-        if (!array_key_exists($id, $this->memory[$table] ?? [])) {
-            throw new \RuntimeException("Cannot delete record not in table");
-        }
-        unset($this->memory[$table][$id]);
+        return iterator_to_array($this->memory[$table] ?? new SplObjectStorage(), false);
     }
 }

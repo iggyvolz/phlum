@@ -3,7 +3,6 @@
 namespace iggyvolz\phlum\MemoryDriver;
 
 use Attribute;
-use iggyvolz\phlum\MemoryDriver\MemoryDriver;
 use iggyvolz\phlum\PhlumDriver;
 use ReflectionClass;
 use ReflectionProperty;
@@ -24,17 +23,14 @@ class SearchIndex implements \iggyvolz\phlum\Indeces\SearchIndex
         if ($target instanceof ReflectionClass) {
             throw new TypeError(static::class . " must be placed on a property, not a class");
         }
-        $ids = [];
-        /**
-         * @var string
-         */
-        $tableName = $target->getDeclaringClass()->getMethod("getTableName")->invoke(null);
-        foreach ($driver->getAll($tableName) as $id) {
-            if (($driver->read($tableName, $id) ?? [])[$target->getName()] === $input) {
-                $ids[] = $id;
+        $refs = [];
+        foreach ($driver->getAll($target->getDeclaringClass()->getName()) as $ref) {
+            $object = $driver->read($ref);
+            if($object && $target->getValue($object) === $input) {
+                $refs[] = $ref;
             }
         }
-        return $ids;
+        return $refs;
     }
 
     public function getMethodName(ReflectionProperty|ReflectionClass $target): string

@@ -5,6 +5,7 @@ namespace iggyvolz\phlum\MemoryDriver;
 use Attribute;
 use iggyvolz\phlum\MemoryDriver\MemoryDriver;
 use iggyvolz\phlum\PhlumDriver;
+use iggyvolz\phlum\PhlumObjectReference;
 use ReflectionClass;
 use ReflectionProperty;
 use TypeError;
@@ -13,7 +14,7 @@ use TypeError;
 class UniqueSearchIndex implements \iggyvolz\phlum\Indeces\UniqueSearchIndex
 {
 
-    public function get(ReflectionClass|ReflectionProperty $target, PhlumDriver $driver, mixed $input): ?int
+    public function get(ReflectionClass|ReflectionProperty $target, PhlumDriver $driver, mixed $input): ?PhlumObjectReference
     {
         if (!$driver instanceof MemoryDriver) {
             throw new TypeError(
@@ -24,13 +25,10 @@ class UniqueSearchIndex implements \iggyvolz\phlum\Indeces\UniqueSearchIndex
         if ($target instanceof ReflectionClass) {
             throw new TypeError(static::class . " must be placed on a property, not a class");
         }
-        /**
-         * @var string
-         */
-        $tableName = $target->getDeclaringClass()->getMethod("getTableName")->invoke(null);
-        foreach ($driver->getAll($tableName) as $id) {
-            if (($driver->read($tableName, $id) ?? [])[$target->getName()] === $input) {
-                return $id;
+        foreach ($driver->getAll($target->getDeclaringClass()->getName()) as $ref) {
+            $object = $driver->read($ref);
+            if($object && $target->getValue($object) === $input) {
+                return $ref;
             }
         }
         return null;

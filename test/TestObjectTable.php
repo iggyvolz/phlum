@@ -10,7 +10,7 @@ use iggyvolz\phlum\MemoryDriver\UniqueSearchIndex;
 use iggyvolz\phlum\PhlumTable;
 
 #[AllIndex]
-class TestTable extends PhlumTable
+class TestObjectTable extends PhlumTable
 {
     public ?int $a;
     #[SearchIndex]

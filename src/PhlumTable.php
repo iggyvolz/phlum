@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum;
 
-use Iggyvolz\SimpleAttributeReflection\AttributeReflection;
 use ReflectionClass;
-use ReflectionProperty;
 use WeakMap;
 use WeakReference;
 
@@ -17,9 +15,15 @@ abstract class PhlumTable
         return (new ReflectionClass(static::class))->isAbstract();
     }
 
-    public function getId(): int
+    private ?PhlumObjectReference $reference;
+    private PhlumDriver $driver;
+
+    public function getReference(): PhlumObjectReference
     {
-        return $this->id;
+        if(is_null($this->reference)) {
+            throw new \LogicException("Cannot get reference to non-created object");
+        }
+        return $this->reference;
     }
 
     public function getDriver(): PhlumDriver
@@ -27,61 +31,34 @@ abstract class PhlumTable
         return $this->driver;
     }
 
-    final public function __construct(private PhlumDriver $driver, private int $id)
+    final public function __construct(PhlumObjectReference|PhlumDriver $referenceOrDriver)
     {
-    }
-    /**
-     * @return array<string, ReflectionProperty>
-     */
-    public static function getProperties(bool $includeId = false): array
-    {
-        $refl = new ReflectionClass(static::class);
-        $props = $refl->getProperties();
-        if (!$includeId) {
-            // Filter out $id
-            $props = array_values(
-                array_filter(
-                    $props,
-                    fn(ReflectionProperty $rp): bool => $rp->getDeclaringClass()->getName() === static::class
-                )
-            );
+        if($referenceOrDriver instanceof PhlumObjectReference) {
+            $this->reference = $referenceOrDriver;
+            $this->driver = $referenceOrDriver->driver;
+        } else {
+            $this->driver = $referenceOrDriver;
         }
-        return array_combine(
-            array_map(fn(ReflectionProperty $rp): string => $rp->getName(), $props),
-            $props
-        );
-    }
-    public static function getTableName(): string
-    {
-        return AttributeReflection::getAttribute(
-            new ReflectionClass(static::class),
-            TableName::class
-        )?->TableName
-            ?? hash("sha256", static::class);
     }
 
     /**
-     * @var null|WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
+     * @var null|WeakMap<PhlumObjectReference,PhlumObject>
      */
     private static ?WeakMap $objects = null;
-    private static function getObject(PhlumDriver $driver, int $id): ?static
+    private static function getObject(PhlumObjectReference $reference): ?static
     {
         $sobjects = self::$objects;
         if (is_null($sobjects)) {
             /**
-             * @var WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>>
+             * @var WeakMap<PhlumObjectReference,PhlumObject>
              */
             $sobjects = new WeakMap();
             self::$objects = $sobjects;
         }
-        if (!$sobjects->offsetExists($driver)) {
+        if (!$sobjects->offsetExists($reference)) {
             return null;
         }
-        /**
-         * @var array<string, array<int, WeakReference<self>>> $objects
-         */
-        $objects = $sobjects->offsetGet($driver);
-        $result = ($objects[static::class][$id] ?? null)?->get() ?? null;
+        $result = $sobjects->offsetGet($reference);
         if (!$result instanceof static) {
             return null;
         }
@@ -90,83 +67,54 @@ abstract class PhlumTable
          */
         return $result;
     }
-    private static function setObject(PhlumDriver $driver, self $object): void
+    private function setObject(PhlumObjectReference $reference): void
     {
         $sobjects = self::$objects;
         if (is_null($sobjects)) {
             /**
-             * @var WeakMap<PhlumDriver, array<string, array<int, WeakReference<self>>>> $sobjects
+             * @var WeakMap<PhlumObjectReference,PhlumObject> $sobjects
              */
             $sobjects = new WeakMap();
             self::$objects = $sobjects;
         }
-        /**
-         * @var array<string, array<int, WeakReference<self>>> $objects
-         */
-        $objects = $sobjects->offsetExists($driver) ? $sobjects->offsetGet($driver) : [];
-        if (!array_key_exists(static::class, $objects)) {
-            $objects[static::class] = [];
-        }
-        $objects[static::class][$object->id] = WeakReference::create($object);
-        $sobjects->offsetSet($driver, $objects);
+        $sobjects->offsetSet($reference, $this);
     }
 
     /**
-     * @param PhlumDriver $driver
-     * @param array<string, mixed> $props
-     * @return static
-     * @phan-suppress PhanTypeInstantiateAbstractStatic
-     *   => Checked internally
+     * @param array<string,mixed> $props
+     * @return $this
+     * @throws \ReflectionException
      */
-    public static function create(PhlumDriver $driver, array $props): static
+    public function create(array $props): static
     {
         if (static::isAbstract()) {
             throw new \LogicException("Cannot call PhlumTable::get on abstract class");
         }
-        $self = new static($driver, $driver->create(static::getTableName(), $props));
-        foreach (static::getProperties() as $i => $property) {
+        foreach($props as $k => $v) {
+            $property = (new ReflectionClass(static::class))->getProperty($k);
             $property->setAccessible(true);
-            $property->setValue($self, $props[$i]);
+            $property->setValue($this, $v);
         }
-        static::setObject($driver, $self);
-        return $self;
+        $reference = $this->driver->create($this);
+        $this->reference = $reference;
+        $this->setObject($reference);
+        return $this;
     }
 
-    /**
-     * @param PhlumDriver $driver
-     * @param int $id
-     * @return static|null
-     * @phan-suppress PhanTypeInstantiateAbstractStatic
-     */
-    public static function get(PhlumDriver $driver, int $id): ?static
+    public static function get(PhlumObjectReference $reference): ?static
     {
         if (static::isAbstract()) {
             throw new \LogicException("Cannot call PhlumTable::get on abstract class");
         }
-        $self = static::getObject($driver, $id);
+        $self = static::getObject($reference);
         if (is_null($self)) {
-            $self = new static($driver, $id);
-            $props = $driver->read(static::getTableName(), $id);
-            if (is_null($props)) {
-                return null;
-            }
-            foreach (static::getProperties() as $i => $property) {
-                $property->setAccessible(true);
-                $property->setValue($self, $props[$i]);
-            }
+            return $reference->driver->read($reference);
         }
         return $self;
     }
     public function write(): void
     {
-        $props = [];
-        foreach (static::getProperties() as $property) {
-            /**
-             * @var mixed
-             */
-            $props[$property->getName()] = $property->getValue($this);
-        }
-        $this->driver->update(static::getTableName(), $this->id, $props);
+        $this->getDriver()->update($this);
     }
 
     /**
@@ -174,16 +122,19 @@ abstract class PhlumTable
      */
     private ?WeakReference $phlumObject = null;
 
-    /**
-     * @param callable(PhlumTable):PhlumObject $creation
-     * @return PhlumObject
-     */
-    public function getPhlumObject(callable $creation): PhlumObject
+    public function getPhlumObject(): PhlumObject
     {
         $obj = $this->phlumObject?->get();
         if (is_null($obj)) {
-            $obj = $creation($this);
-            $this->phlumObject = WeakReference::create($obj);
+            try {
+                $class = new ReflectionClass(substr(static::class, 0, -strlen("Table")));
+            } catch(\ReflectionException) {
+                throw new \LogicException("Could not find class " . substr(static::class, 0, -strlen("Table")) . " from " . static::class);
+            }
+            $this->phlumObject = WeakReference::create($obj = $class->newInstanceWithoutConstructor());
+            $constructor = $class->getConstructor();
+            $constructor?->setAccessible(true);
+            $constructor?->invoke($obj, $this);
         }
         return $obj;
     }

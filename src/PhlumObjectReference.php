@@ -4,16 +4,29 @@ namespace iggyvolz\phlum;
 
 use JetBrains\PhpStorm\Immutable;
 
-#[\Attribute]
+/**
+ * @template T of PhlumObject
+ */
 #[Immutable]
-class PhlumObjectReference
+abstract class PhlumObjectReference
 {
     /**
      * PhlumObjectReference constructor.
-     * @param string $class
+     * @param PhlumDriver $driver
+     * @param class-string<T> $class
      */
-    public function __construct(
-        public string $class
-    ) {
+    protected function __construct(
+        public PhlumDriver $driver,
+        string $class = PhlumObject::class
+    )
+    {
+    }
+
+    /**
+     * @return T
+     */
+    public function get(): PhlumObject
+    {
+        return $this->driver->read($this)->getPhlumObject();
     }
 }

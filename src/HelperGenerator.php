@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum;
 
+use iggyvolz\phlum\Attributes\CreateParameterPromoted;
+use iggyvolz\phlum\Attributes\GetterPromoted;
+use iggyvolz\phlum\Attributes\SetterParameterPromoted;
+use iggyvolz\phlum\Attributes\SetterPromoted;
 use iggyvolz\phlum\Indeces\InclusionIndex;
 use iggyvolz\phlum\Indeces\Index;
 use iggyvolz\phlum\Indeces\UniqueSearchIndex;
 use iggyvolz\phlum\Indeces\SearchIndex;
+use Iggyvolz\SimpleAttributeReflection\AttributeReflection;
 use Nette\PhpGenerator\Parameter;
 use ReflectionClass;
 use ReflectionAttribute;
@@ -60,14 +65,26 @@ class HelperGenerator implements Stringable
             $getter->setReturnType($propertyType);
             $getter->setBody("return \$this->schema->$propertyName;");
             $access->applyGetter($getter);
-            $setter->addParameter("val")->setType($propertyType);
+            $setterParameter = $setter->addParameter("val")->setType($propertyType);
             $access->applySetter($setter);
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
-            $parameter = $create->addParameter($propertyName)->setType($propertyType);
+            $createParameter = $create->addParameter($propertyName)->setType($propertyType);
             if ($property->hasDefaultValue()) {
-                $parameter->setDefaultValue($property->getDefaultValue());
+                $createParameter->setDefaultValue($property->getDefaultValue());
             }
             $create->addBody("    " . var_export($propertyName, true) . " => \$$propertyName,");
+            foreach(AttributeReflection::getAttributes($property, CreateParameterPromoted::class) as $attribute) {
+                $createParameter->addAttribute(...$attribute->getCreateParameterAttribute());
+            }
+            foreach(AttributeReflection::getAttributes($property, SetterParameterPromoted::class) as $attribute) {
+                $setterParameter->addAttribute(...$attribute->getSetterParameterAttribute());
+            }
+            foreach(AttributeReflection::getAttributes($property, SetterPromoted::class) as $attribute) {
+                $setter->addAttribute(...$attribute->getSetterAttribute());
+            }
+            foreach(AttributeReflection::getAttributes($property, GetterPromoted::class) as $attribute) {
+                $getter->addAttribute(...$attribute->getGetterAttribute());
+            }
         }
         // Sort parameters by required first then optional
         $parameters = $create->getParameters();

@@ -8,6 +8,7 @@ use iggyvolz\phlum\Attributes\CreateDriverPromoted;
 use iggyvolz\phlum\Attributes\CreateParameterPromoted;
 use iggyvolz\phlum\Attributes\CreatePromoted;
 use iggyvolz\phlum\Attributes\GetterPromoted;
+use iggyvolz\phlum\Attributes\NoUpdate;
 use iggyvolz\phlum\Attributes\SetterParameterPromoted;
 use iggyvolz\phlum\Attributes\SetterPromoted;
 use iggyvolz\phlum\Attributes\UpdateParameterPromoted;
@@ -76,11 +77,12 @@ class HelperGenerator implements Stringable
             $setterParameter = $setter->addParameter("val")->setType($propertyType);
             $access->applySetter($setter);
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
+            $update->addBody("if(\$val !== " .var_export(NoUpdate::NoUpdate, true). ") \$this->schema->$propertyName = \$val;");
             $createParameter = $create->addParameter($propertyName)->setType($propertyType);
-            $updateParameter = $update->addParameter($propertyName)->setType($propertyType);
+            $updateParameter = $update->addParameter($propertyName)->setType($propertyType  . "|" . NoUpdate::class)
+            $updateParameter->setDefaultValue(NoUpdate::NoUpdate);
             if ($property->hasDefaultValue()) {
                 $createParameter->setDefaultValue($property->getDefaultValue());
-                $updateParameter->setDefaultValue($property->getDefaultValue());
             }
             $create->addBody("    " . var_export($propertyName, true) . " => \$$propertyName,");
             foreach (AttributeReflection::getAttributes($property, CreateParameterPromoted::class) as $attribute) {
@@ -101,14 +103,15 @@ class HelperGenerator implements Stringable
         }
 
         foreach (AttributeReflection::getAttributes($schemaClass, CreatePromoted::class) as $attribute) {
-            $create->addAttribute(...$attribute->getCreateAttribute()());
+            $create->addAttribute(...$attribute->getCreateAttribute());
         }
         foreach (AttributeReflection::getAttributes($schemaClass, CreateDriverPromoted::class) as $attribute) {
-            $createDriver->addAttribute(...$attribute->getCreateDriverAttribute()());
+            $createDriver->addAttribute(...$attribute->getCreateDriverAttribute());
         }
         foreach (AttributeReflection::getAttributes($schemaClass, UpdatePromoted::class) as $attribute) {
             $update->addAttribute(...$attribute->getUpdateAttribute());
         }
+        $update->addBody("\$this->schema->write();");
         // Sort parameters by required first then optional
         $createParameters = $create->getParameters();
         usort(

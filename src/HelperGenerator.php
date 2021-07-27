@@ -101,13 +101,13 @@ class HelperGenerator implements Stringable
         }
 
         foreach (AttributeReflection::getAttributes($schemaClass, CreatePromoted::class) as $attribute) {
-            $create->addAttribute(...$attribute->getGetterAttribute());
+            $create->addAttribute(...$attribute->getCreateAttribute()());
         }
         foreach (AttributeReflection::getAttributes($schemaClass, CreateDriverPromoted::class) as $attribute) {
-            $createDriver->addAttribute(...$attribute->getGetterAttribute());
+            $createDriver->addAttribute(...$attribute->getCreateDriverAttribute()());
         }
         foreach (AttributeReflection::getAttributes($schemaClass, UpdatePromoted::class) as $attribute) {
-            $update->addAttribute(...$attribute->getGetterAttribute());
+            $update->addAttribute(...$attribute->getUpdateAttribute());
         }
         // Sort parameters by required first then optional
         $createParameters = $create->getParameters();

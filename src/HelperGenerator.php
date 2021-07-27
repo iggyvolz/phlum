@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace iggyvolz\phlum;
 
+use iggyvolz\phlum\Attributes\CreateDriverPromoted;
 use iggyvolz\phlum\Attributes\CreateParameterPromoted;
+use iggyvolz\phlum\Attributes\CreatePromoted;
 use iggyvolz\phlum\Attributes\GetterPromoted;
 use iggyvolz\phlum\Attributes\SetterParameterPromoted;
 use iggyvolz\phlum\Attributes\SetterPromoted;
+use iggyvolz\phlum\Attributes\UpdateParameterPromoted;
+use iggyvolz\phlum\Attributes\UpdatePromoted;
 use iggyvolz\phlum\Indeces\InclusionIndex;
 use iggyvolz\phlum\Indeces\Index;
 use iggyvolz\phlum\Indeces\UniqueSearchIndex;
@@ -51,11 +55,15 @@ class HelperGenerator implements Stringable
         $constructor->addBody("parent::__construct(\$schema);");
         // Add create method
         $create = $trait->addMethod("create")->setPublic()->setStatic()->setReturnType("static");
-        $create->addParameter("driver")->setType(PhlumDriver::class);
+        $createDriver = $create->addParameter("driver")->setType(PhlumDriver::class);
         $create->addBody("return (new \\$schema(\$driver))->create([");
+        $update = $trait->addMethod("update")->setPublic()->setReturnType("void");
         // Add getters and setters for properties
-        foreach ((new ReflectionClass($schema))->getProperties() as $property) {
-            if($property->getDeclaringClass()->getName() !== $schema) continue;
+        $schemaClass = new ReflectionClass($schema);
+        foreach ($schemaClass->getProperties() as $property) {
+            if ($property->getDeclaringClass()->getName() !== $schema) {
+                continue;
+            }
             $propertyName = $property->getName();
             $upperPropertyName = ucfirst($propertyName);
             $propertyType = self::getTypeName($property->getType());
@@ -69,31 +77,53 @@ class HelperGenerator implements Stringable
             $access->applySetter($setter);
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
             $createParameter = $create->addParameter($propertyName)->setType($propertyType);
+            $updateParameter = $update->addParameter($propertyName)->setType($propertyType);
             if ($property->hasDefaultValue()) {
                 $createParameter->setDefaultValue($property->getDefaultValue());
+                $updateParameter->setDefaultValue($property->getDefaultValue());
             }
             $create->addBody("    " . var_export($propertyName, true) . " => \$$propertyName,");
-            foreach(AttributeReflection::getAttributes($property, CreateParameterPromoted::class) as $attribute) {
+            foreach (AttributeReflection::getAttributes($property, CreateParameterPromoted::class) as $attribute) {
                 $createParameter->addAttribute(...$attribute->getCreateParameterAttribute());
             }
-            foreach(AttributeReflection::getAttributes($property, SetterParameterPromoted::class) as $attribute) {
+            foreach (AttributeReflection::getAttributes($property, UpdateParameterPromoted::class) as $attribute) {
+                $updateParameter->addAttribute(...$attribute->getUpdateParameterAttribute());
+            }
+            foreach (AttributeReflection::getAttributes($property, SetterParameterPromoted::class) as $attribute) {
                 $setterParameter->addAttribute(...$attribute->getSetterParameterAttribute());
             }
-            foreach(AttributeReflection::getAttributes($property, SetterPromoted::class) as $attribute) {
+            foreach (AttributeReflection::getAttributes($property, SetterPromoted::class) as $attribute) {
                 $setter->addAttribute(...$attribute->getSetterAttribute());
             }
-            foreach(AttributeReflection::getAttributes($property, GetterPromoted::class) as $attribute) {
+            foreach (AttributeReflection::getAttributes($property, GetterPromoted::class) as $attribute) {
                 $getter->addAttribute(...$attribute->getGetterAttribute());
             }
         }
+
+        foreach (AttributeReflection::getAttributes($schemaClass, CreatePromoted::class) as $attribute) {
+            $create->addAttribute(...$attribute->getGetterAttribute());
+        }
+        foreach (AttributeReflection::getAttributes($schemaClass, CreateDriverPromoted::class) as $attribute) {
+            $createDriver->addAttribute(...$attribute->getGetterAttribute());
+        }
+        foreach (AttributeReflection::getAttributes($schemaClass, UpdatePromoted::class) as $attribute) {
+            $update->addAttribute(...$attribute->getGetterAttribute());
+        }
         // Sort parameters by required first then optional
-        $parameters = $create->getParameters();
+        $createParameters = $create->getParameters();
         usort(
-            $parameters,
+            $createParameters,
             fn(Parameter $p1, Parameter $p2): int =>
                 ($p1->hasDefaultValue() ? 1 : 0) <=> ($p2->hasDefaultValue() ? 1 : 0)
         );
-        $create->setParameters($parameters);
+        $create->setParameters($createParameters);
+        $updateParameters = $update->getParameters();
+        usort(
+            $updateParameters,
+            fn(Parameter $p1, Parameter $p2): int =>
+                ($p1->hasDefaultValue() ? 1 : 0) <=> ($p2->hasDefaultValue() ? 1 : 0)
+        );
+        $update->setParameters($updateParameters);
         $create->addBody("])->getPhlumObject(fn(\\$schema \$schema) => new self(\$schema));");
 
         // Add indeces

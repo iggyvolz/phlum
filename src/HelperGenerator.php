@@ -8,6 +8,8 @@ use iggyvolz\phlum\Attributes\CreateDriverPromoted;
 use iggyvolz\phlum\Attributes\CreateParameterPromoted;
 use iggyvolz\phlum\Attributes\CreatePromoted;
 use iggyvolz\phlum\Attributes\GetterPromoted;
+use iggyvolz\phlum\Attributes\IndexDriverPromoted;
+use iggyvolz\phlum\Attributes\IndexPromoted;
 use iggyvolz\phlum\Attributes\NoUpdate;
 use iggyvolz\phlum\Attributes\SetterParameterPromoted;
 use iggyvolz\phlum\Attributes\SetterPromoted;
@@ -79,7 +81,7 @@ class HelperGenerator implements Stringable
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
             $update->addBody("if(\$val !== " .var_export(NoUpdate::NoUpdate, true). ") \$this->schema->$propertyName = \$val;");
             $createParameter = $create->addParameter($propertyName)->setType($propertyType);
-            $updateParameter = $update->addParameter($propertyName)->setType($propertyType  . "|" . NoUpdate::class)
+            $updateParameter = $update->addParameter($propertyName)->setType($propertyType  . "|" . NoUpdate::class);
             $updateParameter->setDefaultValue(NoUpdate::NoUpdate);
             if ($property->hasDefaultValue()) {
                 $createParameter->setDefaultValue($property->getDefaultValue());
@@ -135,10 +137,16 @@ class HelperGenerator implements Stringable
                 $index = $attr->newInstance();
                 $methodName = $index->getMethodName($target);
                 $method = $trait->addMethod($methodName);
+                $driverParam = $method->addParameter("driver")->setType(PhlumDriver::class);
+                foreach(AttributeReflection::getAttributes((new ReflectionClass($index)), IndexPromoted::class) as $promotedIndex) {
+                    $method->addAttribute(...$promotedIndex->getIndexAttribute($this->class));
+                }
+                foreach(AttributeReflection::getAttributes((new ReflectionClass($index)), IndexDriverPromoted::class) as $promotedIndex) {
+                    $driverParam->addAttribute(...$promotedIndex->getIndexDriverAttribute($this->class));
+                }
                 switch (true) {
                     case $index instanceof InclusionIndex:
                         $method->setReturnType("array")->setStatic();
-                        $method->addParameter("driver")->setType(PhlumDriver::class);
                         $method->setBody("return (new \\" . $attr->getName() . "(" . implode(
                             ",",
                             array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
@@ -146,7 +154,6 @@ class HelperGenerator implements Stringable
                         break;
                     case $index instanceof SearchIndex:
                         $method->setReturnType("array")->setStatic();
-                        $method->addParameter("driver")->setType(PhlumDriver::class);
                         $method->addParameter("input")->setType($index->getType($target));
                         $method->setBody("return (new \\" . $attr->getName() . "(" . implode(
                             ",",
@@ -156,7 +163,6 @@ class HelperGenerator implements Stringable
                         break;
                     case $index instanceof UniqueSearchIndex:
                         $method->setReturnType(PhlumObjectReference::class . "|null")->setStatic();
-                        $method->addParameter("driver")->setType(PhlumDriver::class);
                         $method->addParameter("input")->setType($index->getType($target));
                         $method->setBody("return (new \\" . $attr->getName() . "(" . implode(
                             ",",

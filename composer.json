@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": "^8.1",
-        "nette/php-generator": "dev-master#77439fd8dc7546f4957f4451171ac05470bfbbd9",
+        "nette/php-generator": "dev-dump-enums#28233369aa360085b33c2645aa9dbb455d9b501a",
         "nette/utils": "dev-master#dc67af69b6586a2ff086d5c0fbaccada67e9486d",
         "iggyvolz/classgen": "dev-main",
         "iggyvolz/simple-attribute-reflection": "dev-main"
@@ -33,5 +33,9 @@
         "psr-4": {
             "iggyvolz\\phlum\\test\\": "test/"
         }
-    }
+    },
+    "repositories": [{
+        "type": "git",
+        "url": "https://github.com/iggyvolz/php-generator.git"
+    }]
 }

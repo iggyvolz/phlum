@@ -79,7 +79,7 @@ class HelperGenerator implements Stringable
             $setterParameter = $setter->addParameter("val")->setType($propertyType);
             $access->applySetter($setter);
             $setter->setBody("\$this->schema->$propertyName = \$val;\n\$this->schema->write();");
-            $update->addBody("if(\$val !== \\" .var_export(NoUpdate::NoUpdate, true). ") \$this->schema->$propertyName = \$val;");
+            $update->addBody("if(\$$propertyName !== \\" .var_export(NoUpdate::NoUpdate, true). ") \$this->schema->$propertyName = \$$propertyName;");
             $createParameter = $create->addParameter($propertyName)->setType($propertyType);
             $updateParameter = $update->addParameter($propertyName)->setType($propertyType  . "|" . NoUpdate::class);
             $updateParameter->setDefaultValue(NoUpdate::NoUpdate);

@@ -141,6 +141,9 @@ class HelperGenerator implements Stringable
                 foreach(AttributeReflection::getAttributes((new ReflectionClass($index)), IndexPromoted::class) as $promotedIndex) {
                     $method->addAttribute(...$promotedIndex->getIndexAttribute($this->class));
                 }
+                if($index instanceof IndexPromoted) {
+                    $method->addAttribute(...$index->getIndexAttribute($this->class));
+                }
                 foreach(AttributeReflection::getAttributes((new ReflectionClass($index)), IndexDriverPromoted::class) as $promotedIndex) {
                     $driverParam->addAttribute(...$promotedIndex->getIndexDriverAttribute($this->class));
                 }

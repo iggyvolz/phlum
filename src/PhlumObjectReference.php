@@ -17,7 +17,7 @@ abstract class PhlumObjectReference
      */
     protected function __construct(
         public PhlumDriver $driver,
-        string $class = PhlumObject::class
+        public string $class = PhlumObject::class
     )
     {
     }

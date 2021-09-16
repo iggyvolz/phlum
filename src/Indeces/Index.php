@@ -6,7 +6,7 @@ use ReflectionClass;
 use ReflectionProperty;
 
 /**
- * Indeces are declared on the PhlumTable
+ * Indeces are declared on the PhlumObjectSchema
  */
 interface Index
 {

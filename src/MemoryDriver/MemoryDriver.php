@@ -4,20 +4,20 @@ namespace iggyvolz\phlum\MemoryDriver;
 
 use iggyvolz\phlum\PhlumDriver;
 use iggyvolz\phlum\PhlumObjectReference;
-use iggyvolz\phlum\PhlumTable;
+use iggyvolz\phlum\PhlumObjectSchema;
 use SplObjectStorage;
 
 class MemoryDriver extends PhlumDriver
 {
     /**
-     * @var array<string,SplObjectStorage<PhlumObjectReference,PhlumTable>>
+     * @var array<string,SplObjectStorage<PhlumObjectReference,PhlumObjectSchema>>
      */
     public array $memory = [];
     public function __construct()
     {
     }
 
-    public function create(PhlumTable $data): PhlumObjectReference
+    public function create(PhlumObjectSchema $data): PhlumObjectReference
     {
         $tableName = $data::class;
         if(!array_key_exists($tableName, $this->memory)) {
@@ -27,7 +27,7 @@ class MemoryDriver extends PhlumDriver
         return $ref;
     }
 
-    public function read(PhlumObjectReference $reference): ?PhlumTable
+    public function read(PhlumObjectReference $reference): ?PhlumObjectSchema
     {
         if(!$reference instanceof DummyPhlumObjectReference) {
             throw new \LogicException();
@@ -39,12 +39,12 @@ class MemoryDriver extends PhlumDriver
         return null;
     }
 
-    public function update(PhlumTable $data): void
+    public function update(PhlumObjectSchema $data): void
     {
         // No-op; the object will already update
     }
 
-    public function delete(PhlumTable $data): void
+    public function delete(PhlumObjectSchema $data): void
     {
         $tableName = $data::class;
         if(array_key_exists($tableName, $this->memory)) {

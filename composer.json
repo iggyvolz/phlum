@@ -19,10 +19,12 @@
     ],
     "require": {
         "php": "^8.0",
-        "nette/php-generator": "dev-master#7c91b22d7d8d54ceea5f7c30300563d40ff6c2a4",
-        "nette/utils": "dev-master#f06376c65d5ba63a8ab9e769f55f2bcbe722d42e",
-        "iggyvolz/classgen": "dev-main",
-        "iggyvolz/simple-attribute-reflection": "dev-main"
+        "nette/php-generator": "^v3.6.0",
+        "nette/utils": "^v3.2.3",
+        "iggyvolz/simple-attribute-reflection": "dev-main",
+        "iggyvolz/uuiddb": "dev-main",
+        "ext-igbinary": "*",
+        "ext-dba": "*"
     },
     "autoload": {
         "psr-4": {

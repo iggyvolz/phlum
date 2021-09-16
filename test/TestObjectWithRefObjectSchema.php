@@ -4,10 +4,10 @@ namespace iggyvolz\phlum\test;
 
 use iggyvolz\phlum\MemoryDriver\AllIndex;
 use iggyvolz\phlum\PhlumObjectReference;
-use iggyvolz\phlum\PhlumTable;
+use iggyvolz\phlum\PhlumObjectSchema;
 
 #[AllIndex]
-class TestObjectWithRefTable extends PhlumTable
+class TestObjectWithRefObjectSchema extends PhlumObjectSchema
 {
     #[ReferenceTo(TestObject::class)]
     public PhlumObjectReference $ref;

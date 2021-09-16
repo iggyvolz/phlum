@@ -7,10 +7,10 @@ namespace iggyvolz\phlum\test;
 use iggyvolz\phlum\MemoryDriver\AllIndex;
 use iggyvolz\phlum\MemoryDriver\SearchIndex;
 use iggyvolz\phlum\MemoryDriver\UniqueSearchIndex;
-use iggyvolz\phlum\PhlumTable;
+use iggyvolz\phlum\PhlumObjectSchema;
 
 #[AllIndex]
-class TestObjectTable extends PhlumTable
+class TestObjectObjectSchema extends PhlumObjectSchema
 {
     public ?int $a;
     #[SearchIndex]

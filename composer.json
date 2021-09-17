@@ -19,8 +19,8 @@
     ],
     "require": {
         "php": "^8.1",
-        "nette/php-generator": "dev-master#5fe11779a644dce6410205acfa1c85bd088b260f",
-        "nette/utils": "dev-master#dc67af69b6586a2ff086d5c0fbaccada67e9486d",
+        "nette/php-generator": "^3.6.1",
+        "nette/utils": "^3.2.3",
         "iggyvolz/classgen": "dev-main",
         "iggyvolz/simple-attribute-reflection": "dev-main"
     },

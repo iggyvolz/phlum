@@ -20,6 +20,7 @@ use iggyvolz\phlum\Indeces\Index;
 use iggyvolz\phlum\Indeces\UniqueSearchIndex;
 use iggyvolz\phlum\Indeces\SearchIndex;
 use Iggyvolz\SimpleAttributeReflection\AttributeReflection;
+use Nette\PhpGenerator\Dumper;
 use Nette\PhpGenerator\Parameter;
 use ReflectionClass;
 use ReflectionAttribute;
@@ -152,7 +153,7 @@ class HelperGenerator implements Stringable
                         $method->setReturnType("array")->setStatic();
                         $method->setBody("return (new \\" . $attr->getName() . "(" . implode(
                             ",",
-                            array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
+                            array_map((new Dumper())->dump(...), $attr->getArguments())
                         ) . "))->get(new \ReflectionClass(\\$schema::class), \$driver);");
                         break;
                     case $index instanceof SearchIndex:
@@ -160,7 +161,7 @@ class HelperGenerator implements Stringable
                         $method->addParameter("input")->setType($index->getType($target));
                         $method->setBody("return (new \\" . $attr->getName() . "(" . implode(
                             ",",
-                            array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
+                            array_map((new Dumper())->dump(...), $attr->getArguments())
                         ) . "))->get(new \ReflectionProperty(\\$schema::class, "
                             . var_export($target->getName(), true) . "), \$driver, \$input);");
                         break;
@@ -169,7 +170,7 @@ class HelperGenerator implements Stringable
                         $method->addParameter("input")->setType($index->getType($target));
                         $method->setBody("return (new \\" . $attr->getName() . "(" . implode(
                             ",",
-                            array_map(fn(mixed $arg): string => var_export($arg, true), $attr->getArguments())
+                            array_map((new Dumper())->dump(...), $attr->getArguments())
                         ) . "))->get(new \ReflectionProperty(\\$schema::class, "
                             . var_export($target->getName(), true) . "), \$driver, \$input);");
                         break;

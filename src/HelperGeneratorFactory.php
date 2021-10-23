@@ -47,6 +47,10 @@ class HelperGeneratorFactory extends ClassGenerator
                     {
                         throw new \\LogicException("Cannot call method on stub trait");
                     }
+                    public static function create(): never
+                    {
+                        throw new \\LogicException("Cannot call method on stub trait");
+                    }
                 }
             }
         EOT);

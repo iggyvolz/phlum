@@ -11,9 +11,9 @@ use JetBrains\PhpStorm\Immutable;
 #[Immutable]
 class DummyPhlumObjectReference extends PhlumObjectReference
 {
-    public function __construct(public PhlumDriver $driver, public string $class)
+    public function __construct(public PhlumDriver $driver, string $class)
     {
-        parent::__construct($this->driver);
+        parent::__construct($this->driver, $class);
     }
 
     public function getDriver(): PhlumDriver

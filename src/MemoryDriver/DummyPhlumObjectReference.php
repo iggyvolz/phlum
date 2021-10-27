@@ -9,7 +9,7 @@ use iggyvolz\phlum\PhlumObjectReference;
 use JetBrains\PhpStorm\Immutable;
 
 #[Immutable]
-class DummyPhlumObjectReference extends PhlumObjectReference
+class DummyPhlumObjectReference extends PhlumObjectReference implements \JsonSerializable
 {
     public function __construct(public PhlumDriver $driver, string $class)
     {

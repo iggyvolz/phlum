@@ -20,4 +20,10 @@ class DummyPhlumObjectReference extends PhlumObjectReference
     {
         return $this->driver;
     }
+    
+
+    public function jsonSerialize(): int
+    {
+        return spl_object_id($this);
+    }
 }

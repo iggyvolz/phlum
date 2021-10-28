@@ -8,7 +8,8 @@
         "squizlabs/php_codesniffer": "^3.6",
         "vimeo/psalm": "^4.3",
         "phpstan/phpstan": "^0.12.80",
-        "jetbrains/phpstorm-attributes": "^1.0"
+        "jetbrains/phpstorm-attributes": "^1.0",
+        "guzzlehttp/guzzle": "^7.4"
     },
     "license": "MIT",
     "authors": [
@@ -19,10 +20,12 @@
     ],
     "require": {
         "php": "^8.0",
-        "nette/php-generator": "dev-master#7c91b22d7d8d54ceea5f7c30300563d40ff6c2a4",
-        "nette/utils": "dev-master#f06376c65d5ba63a8ab9e769f55f2bcbe722d42e",
+        "nette/php-generator": "^v3.6.4",
+        "nette/utils": "^3.2.5",
         "iggyvolz/classgen": "dev-main",
-        "iggyvolz/simple-attribute-reflection": "dev-main"
+        "iggyvolz/simple-attribute-reflection": "dev-main",
+        "psr/http-client": "^1.0",
+        "nyholm/psr7": "^1.4"
     },
     "autoload": {
         "psr-4": {

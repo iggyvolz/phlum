@@ -44,7 +44,7 @@ class HelperGenerator implements Stringable
         // Add protected constructor
         $constructor = $trait->addMethod("__construct")->setPrivate();
         $schema = $this->class . "Table";
-        if (!is_subclass_of($schema, PhlumTable::class)) {
+        if (!is_subclass_of($schema, PhlumObjectData::class)) {
             throw new \LogicException("Invalid schema $schema");
         }
         $constructor->addPromotedParameter("schema")->setType($schema)->setProtected();

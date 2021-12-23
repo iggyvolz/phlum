@@ -59,4 +59,12 @@ class MemoryDriver extends PhlumDriver
     {
         return iterator_to_array($this->memory[$table] ?? new SplObjectStorage(), false);
     }
+
+    public function getById(string $table, int $id): ?PhlumObjectReference
+    {
+        foreach(self::getAll($table) as $ref) {
+            if(spl_object_id($ref) === $id) return $ref;
+        }
+        return null;
+    }
 }

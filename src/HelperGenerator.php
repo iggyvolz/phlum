@@ -198,6 +198,6 @@ class HelperGenerator implements Stringable
 
     public function __toString(): string
     {
-        return substr((new PsrPrinter())->printFile($this->contents), strlen("<?php\n"));
+        return (new PsrPrinter())->printFile($this->contents);
     }
 }
